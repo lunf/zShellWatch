@@ -24,7 +24,13 @@ struct HealthInfo {
         self.excerciseTime = excerciseTime
         self.standHours = standHours
         self.heartRate = heartRate
-        self.bgImage = userdefaults?.string(forKey: qHealthImageKey) ?? qHealthImage
+        self.bgImage = qHealthImage
+
+        if let imageName = userdefaults?.string(forKey: qHealthImageKey) {
+            if let path = FileManager.default.getShareImagePath(imageName: imageName) {
+                self.bgImage = path
+            }
+        }
     }
     
     init(){

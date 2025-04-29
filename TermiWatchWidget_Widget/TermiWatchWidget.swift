@@ -59,16 +59,16 @@ struct HealthWidget: Widget {
 struct CircularProvider: TimelineProvider {
   
     func placeholder(in context: Context) -> CircularEntry {
-        return CircularEntry(image: leftTopImageName, string: "Q")
+        return CircularEntry(image: leftTopImageName(), string: "Q")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (CircularEntry) -> ()) {
-        let entry = CircularEntry(image: leftTopImageName, string: "Q")
+        let entry = CircularEntry(image: leftTopImageName(), string: "Q")
         completion(entry)
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        let entry = CircularEntry(image: leftTopImageName, string: "Q")
+        let entry = CircularEntry(image: leftTopImageName(), string: "Q")
         let timeline = Timeline(entries: [entry], policy: .never)
         completion(timeline)
     }
@@ -181,13 +181,7 @@ struct CircularWidgetEntryView : View{
     var body: some View {
         switch family {
         case .accessoryCircular:
-            
-            let uiImage = UIImage(named: entry.image)
-            if(uiImage != nil){
-                Image(uiImage: uiImage!)
-            }else{
-                Text(entry.string)
-            }
+            SmallCircularView( image: entry.image, text: entry.string)
             
         default:
             VStack{}
@@ -206,7 +200,7 @@ struct WeatherWidgetEntryView : View {
             
             Text("Q")
              
-        case .accessoryRectangular: 
+        case .accessoryRectangular:
             
             WeatherRectangularView(context: entry.context, weather: entry.weather)
 
@@ -277,5 +271,5 @@ struct HealthEntry: TimelineEntry {
 #Preview(as: .accessoryCircular) {
     CircularWidget()
 } timeline: {
-    CircularEntry(image: leftTopImageName, string: "Q")
+    CircularEntry(image: leftTopImageName(), string: "Q")
 }

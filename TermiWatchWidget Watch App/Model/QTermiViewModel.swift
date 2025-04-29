@@ -14,6 +14,7 @@ import Foundation
 class QTermiViewModel {
     var health = HealthInfo()
     var weather = WeatherViewInfo()
+    var smallImage = leftTopImageName()
     
     let healthObserver = HealthObserver()
     let widgetLocationManager = WidgetLocationManager()
@@ -43,7 +44,9 @@ class QTermiViewModel {
                 print("self.health \n")
             }
         }
-        
+        DispatchQueue.main.async {
+            self.smallImage = leftTopImageName()
+        }
     }
 }
 #else

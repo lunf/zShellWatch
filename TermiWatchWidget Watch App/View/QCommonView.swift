@@ -22,7 +22,12 @@ struct WeatherViewInfo {
         self.current = current
         self.after1Hours = after1Hours
         self.alert = alert
-        self.bgImage = userdefaults?.string(forKey: qWeatherImageKey) ?? qWeatherImage
+        self.bgImage = qWeatherImage
+        if let imageName = userdefaults?.string(forKey: qWeatherImageKey) {
+            if let path = FileManager.default.getShareImagePath(imageName: imageName) {
+                self.bgImage = path
+            }
+        }
     }
     
     init(current: QWeather, after1Hours: QWeather, alert: String) {
@@ -51,7 +56,7 @@ struct WeatherRectangularView : View {
                     MyText("[DATE]",fontSize: qFontSize+0.5)
                     MyText(weather.dateText!).frame(maxWidth: .infinity, alignment: .leading).minimumScaleFactor(0.8).foregroundStyle(colorDate)
                 }else{
-                    MyText("user@\(terminalName):~ $ now").frame(maxWidth: .infinity, alignment: .leading)
+                    MyText("user@\(terminalName()):~ $ now").frame(maxWidth: .infinity, alignment: .leading)
                 }
             }.frame(height: rowHeight)
             if(weather.alert.count>0){
@@ -94,8 +99,14 @@ struct WeatherRectangularView : View {
                     }.minimumScaleFactor(0.6)
                 }.frame(height: rowHeight)
             }
-        }.background(Image(weather.bgImage ?? "").resizable()
+        }
+#if os(watchOS)
+        .background(Image(contentsOf:  weather.bgImage ?? "")?.resizable()
+            .aspectRatio(contentMode: .fill).opacity(0.35))
+#else
+        .background(Image(contentsOf:  weather.bgImage ?? "")?.resizable()
             .aspectRatio(contentMode: .fit).opacity(0.35))
+#endif
     }
 }
 
@@ -136,12 +147,32 @@ struct HealthRectangularView : View {
             }.frame(height: rowHeight)
             
             HStack {
-                MyText("user@\(terminalName):~ $ ").frame(maxWidth: .infinity, alignment: .leading)
+                MyText("user@\(terminalName()):~ $ ").frame(maxWidth: .infinity, alignment: .leading)
             }.frame(height: rowHeight)
-        }.background(Image(health.bgImage ?? "").resizable()
+        }
+#if os(watchOS)
+        .background(Image(contentsOf: health.bgImage ?? "")?.resizable()
+            .aspectRatio(contentMode: .fill).opacity(0.35))
+#else
+        .background(Image(contentsOf: health.bgImage ?? "")?.resizable()
             .aspectRatio(contentMode: .fit).opacity(0.35))
+#endif
     }
 }
+
+struct SmallCircularView : View {
+    var image: String?
+    var text : String?
+
+    var body: some View {
+        if let image = image{
+            Image(contentsOf: image)?.resizable()
+        }else{
+            Text(text ?? "Q")
+        }
+    }
+}
+
 
 
 struct MyText: View {

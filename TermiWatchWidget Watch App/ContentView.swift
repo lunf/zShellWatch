@@ -13,6 +13,11 @@ struct ContentView: View {
 
     var body: some View {
         VStack{
+            HStack{
+                SmallCircularView(image: viewModel.smallImage).frame(width: 50,height: 50, alignment: .leading)
+                Spacer()
+            }
+            
             WeatherRectangularView(context: nil, weather: viewModel.weather)
             HealthRectangularView(context: nil, health: viewModel.health)
         }

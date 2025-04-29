@@ -185,6 +185,11 @@
 		6E6936F22AEA19F6006085E1 /* TWExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6936F12AEA19F6006085E1 /* TWExtension.swift */; };
 		6E6936F32AEA19F6006085E1 /* TWExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6936F12AEA19F6006085E1 /* TWExtension.swift */; };
 		6E6936F42AEA19F6006085E1 /* TWExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6936F12AEA19F6006085E1 /* TWExtension.swift */; };
+		6E7DAB442DBF9BA0009AE728 /* QShareFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7DAB432DBF9BA0009AE728 /* QShareFileManager.swift */; };
+		6E7DAB452DBF9BA0009AE728 /* QShareFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7DAB432DBF9BA0009AE728 /* QShareFileManager.swift */; };
+		6E7DAB462DBF9BA0009AE728 /* QShareFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7DAB432DBF9BA0009AE728 /* QShareFileManager.swift */; };
+		6E7DAB492DBF9BAC009AE728 /* QWatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7DAB472DBF9BAC009AE728 /* QWatchSessionManager.swift */; };
+		6E7DAB4A2DBF9BAC009AE728 /* QWatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7DAB472DBF9BAC009AE728 /* QWatchSessionManager.swift */; };
 		6E7DD5EB2AD5542F003E0C77 /* TermiWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7DD5EA2AD5542F003E0C77 /* TermiWatchApp.swift */; };
 		6E7DD5F02AD55431003E0C77 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6E7DD5EF2AD55431003E0C77 /* Assets.xcassets */; };
 		6E7DD5F32AD55431003E0C77 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E7DD5F12AD55431003E0C77 /* LaunchScreen.storyboard */; };
@@ -317,6 +322,8 @@
 		6E69364C2AE93E44006085E1 /* SVGStroke.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SVGStroke.swift; sourceTree = "<group>"; };
 		6E69364E2AE93E44006085E1 /* SVGView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVGView.h; sourceTree = "<group>"; };
 		6E6936F12AEA19F6006085E1 /* TWExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TWExtension.swift; sourceTree = "<group>"; };
+		6E7DAB432DBF9BA0009AE728 /* QShareFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QShareFileManager.swift; sourceTree = "<group>"; };
+		6E7DAB472DBF9BAC009AE728 /* QWatchSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QWatchSessionManager.swift; sourceTree = "<group>"; };
 		6E7DD5E32AD5542F003E0C77 /* TermiWatchWidget.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TermiWatchWidget.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E7DD5EA2AD5542F003E0C77 /* TermiWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermiWatchApp.swift; sourceTree = "<group>"; };
 		6E7DD5EF2AD55431003E0C77 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -598,6 +605,8 @@
 			isa = PBXGroup;
 			children = (
 				6EFD70832B21BFB600143963 /* TermiWatchWidget.watchface */,
+				6E7DAB472DBF9BAC009AE728 /* QWatchSessionManager.swift */,
+				6E7DAB432DBF9BA0009AE728 /* QShareFileManager.swift */,
 				6E2CC4252AEBCB0B002E58D5 /* QConfiguration.swift */,
 				6E6936F12AEA19F6006085E1 /* TWExtension.swift */,
 				6EAA2BB52AF0C24600368E8D /* JieQi.swift */,
@@ -811,6 +820,7 @@
 				6E69366A2AE93E45006085E1 /* SVGParserExtensions.swift in Sources */,
 				6E6936CA2AE93E45006085E1 /* SVGPath.swift in Sources */,
 				6E6936CD2AE93E45006085E1 /* SVGPolyline.swift in Sources */,
+				6E7DAB452DBF9BA0009AE728 /* QShareFileManager.swift in Sources */,
 				6E69364F2AE93E45006085E1 /* MBezierPath+Extension_macOS.swift in Sources */,
 				6EAA2BB62AF0C24600368E8D /* JieQi.swift in Sources */,
 				6E6936C72AE93E45006085E1 /* SVGLine.swift in Sources */,
@@ -829,6 +839,7 @@
 				6E6936A92AE93E45006085E1 /* SVGText.swift in Sources */,
 				6E6936E82AE93E45006085E1 /* SVGGradient.swift in Sources */,
 				6E69368B2AE93E45006085E1 /* SVGTextParser.swift in Sources */,
+				6E7DAB4A2DBF9BAC009AE728 /* QWatchSessionManager.swift in Sources */,
 				6E6936AC2AE93E45006085E1 /* SVGNode.swift in Sources */,
 				6E6936B22AE93E45006085E1 /* SVGShape.swift in Sources */,
 				6E6936732AE93E45006085E1 /* SVGLengthParser.swift in Sources */,
@@ -880,6 +891,7 @@
 				6E69366B2AE93E45006085E1 /* SVGParserExtensions.swift in Sources */,
 				6E6936CB2AE93E45006085E1 /* SVGPath.swift in Sources */,
 				6E6936CE2AE93E45006085E1 /* SVGPolyline.swift in Sources */,
+				6E7DAB462DBF9BA0009AE728 /* QShareFileManager.swift in Sources */,
 				6E6936502AE93E45006085E1 /* MBezierPath+Extension_macOS.swift in Sources */,
 				6EAA2BB72AF0E39F00368E8D /* JieQi.swift in Sources */,
 				6E6936C82AE93E45006085E1 /* SVGLine.swift in Sources */,
@@ -898,6 +910,7 @@
 				6E6936AA2AE93E45006085E1 /* SVGText.swift in Sources */,
 				6E6936E92AE93E45006085E1 /* SVGGradient.swift in Sources */,
 				6E69368C2AE93E45006085E1 /* SVGTextParser.swift in Sources */,
+				6E7DAB492DBF9BAC009AE728 /* QWatchSessionManager.swift in Sources */,
 				6E6936AD2AE93E45006085E1 /* SVGNode.swift in Sources */,
 				6E6936B32AE93E45006085E1 /* SVGShape.swift in Sources */,
 				6E6936742AE93E45006085E1 /* SVGLengthParser.swift in Sources */,
@@ -972,6 +985,7 @@
 				6E6936D22AE93E45006085E1 /* SVGRect.swift in Sources */,
 				6E6936CC2AE93E45006085E1 /* SVGPath.swift in Sources */,
 				6E6936602AE93E45006085E1 /* SVGLinker.swift in Sources */,
+				6E7DAB442DBF9BA0009AE728 /* QShareFileManager.swift in Sources */,
 				6E6936962AE93E45006085E1 /* SVGParserPrimitives.swift in Sources */,
 				6E6936872AE93E45006085E1 /* SVGImageParser.swift in Sources */,
 				6E6936B72AE93E45006085E1 /* SVGGroup.swift in Sources */,
@@ -1169,15 +1183,16 @@
 				CODE_SIGN_ENTITLEMENTS = TermiWatchWidget/TermiWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7C448R8D4P;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1185,7 +1200,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.3.22;
 				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1205,15 +1220,16 @@
 				CODE_SIGN_ENTITLEMENTS = TermiWatchWidget/TermiWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7C448R8D4P;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1221,7 +1237,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.3.22;
 				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1244,13 +1260,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"TermiWatchWidget Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = 7C448R8D4P;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TermiWatchWidget-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.void.termiWatch;
@@ -1281,13 +1298,14 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"TermiWatchWidget Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = 7C448R8D4P;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TermiWatchWidget-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.void.termiWatch;
@@ -1316,12 +1334,13 @@
 				CODE_SIGN_ENTITLEMENTS = TermiWatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7C448R8D4P;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget_Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TermiWatchWidgetExtension;
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1351,12 +1370,13 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7C448R8D4P;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget_Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TermiWatchWidgetExtension;
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -297,13 +297,13 @@ func getHFWeather(location: CLLocation, handler: (@escaping (WeatherInfo) -> Voi
 }
 
 class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
-    @AppStorage("LastLocation", store: UserDefaults(suiteName: qGroupBundleID))
+    @AppStorage("LastLocation", store: UserDefaults.init(suiteName: qGroupBundleID))
     var lastLocation: String = defaultCity{ // Beijing
         didSet{
             print("lastLocation didset")
         }
     }
-    @AppStorage("LastLocationTime", store: UserDefaults(suiteName: qGroupBundleID))
+    @AppStorage("LastLocationTime", store: UserDefaults.init(suiteName: qGroupBundleID))
     var lastLocationTime: String = ""{
         didSet{
             print("LastLocationTime didset")
