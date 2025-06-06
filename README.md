@@ -19,8 +19,8 @@ Use **WeatherKit** to obtain weather information. **WeatherKit** only supports *
 **qweather** has been introduced, and you can apply for a Key to replace the WeatherKit yourself.  https://dev.qweather.com/en/  
 
 #### Custom background image added.  
-* Next step, Add upload image function, auto-crop set as dial background image.  
-  
+#### Add upload image function, auto-crop set as dial background image.  
+  * ~Attempt to add dynamic background image, power consumption is too high, give up...~
   
 # How to install
 
