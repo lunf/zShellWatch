@@ -8,15 +8,36 @@
 import HealthKit
 import SwiftUICore
 
+struct HealthHRV{
+    var hrv: Int
+    var color: Color
+    
+    init(hrv: Int, color: Color) {
+        self.hrv = hrv
+        self.color = color
+    }
+    
+    init(){
+        self.hrv = -1
+        self.color = Color.green
+    }
+    
+    init(hrv: Int){
+        self.hrv = hrv
+        self.color = Color.green
+    }
+}
+
 struct HealthInfo {
     var steps: Int
     var excercise: Int
     var excerciseTime: Int
     var standHours: Int
     var heartRate: Int
+    var hrv: HealthHRV
     var bgImage: String? = qHealthImage
 
-    init(steps: Int, excercise: Int, excerciseTime: Int, standHours: Int, heartRate: Int) {
+    init(steps: Int, excercise: Int, excerciseTime: Int, standHours: Int, heartRate: Int, hrv: HealthHRV) {
         let userdefaults = UserDefaults.init(suiteName: qGroupBundleID)
 
         self.steps = steps
@@ -24,6 +45,7 @@ struct HealthInfo {
         self.excerciseTime = excerciseTime
         self.standHours = standHours
         self.heartRate = heartRate
+        self.hrv = hrv
         self.bgImage = qHealthImage
 
         if let imageName = userdefaults?.string(forKey: qHealthImageKey) {
@@ -34,7 +56,7 @@ struct HealthInfo {
     }
     
     init(){
-        self.init(steps: 0, excercise: 0, excerciseTime: 0, standHours: 0, heartRate: 0)
+        self.init(steps: 0, excercise: 0, excerciseTime: 0, standHours: 0, heartRate: 0, hrv: HealthHRV())
     }
   
     func description() -> String {
@@ -49,6 +71,8 @@ struct HealthInfo {
 
 // MARK: - HealthObserver
 class HealthObserver {
+    let userdefaults = UserDefaults.init(suiteName: qGroupBundleID)
+
     /// - Tag: Health Store
     let healthStore: HKHealthStore
     
@@ -58,14 +82,22 @@ class HealthObserver {
         HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
         HKObjectType.quantityType(forIdentifier: .appleExerciseTime)!,
         HKObjectType.quantityType(forIdentifier: .heartRate)!,
+        HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,
         HKObjectType.quantityType(forIdentifier: .stepCount)!,
     ])
+    
+    var lastHRV: Int{
+        didSet{
+            userdefaults?.set(lastHRV, forKey: "lastHRV")
+        }
+    }
     
     init() {
         self.healthStore = HKHealthStore()
         healthStore.requestAuthorization(toShare: nil, read: hkDataTypesOfInterest) { result,error in
             print(result.description + " \n " + (error?.localizedDescription ?? ""))
         }
+        lastHRV = userdefaults?.integer(forKey: "lastHRV") ?? 0
     }
     
     func fetchSample(quantityType: HKQuantityType, unit: HKUnit, completion: @escaping (Int) -> ()){
@@ -203,7 +235,7 @@ extension HealthObserver {
         print("getHealthInfo...")
 
         
-        var health = HealthInfo(steps: -1, excercise: -1, excerciseTime: -1, standHours: -1, heartRate: -1);
+        var health = HealthInfo(steps: -1, excercise: -1, excerciseTime: -1, standHours: -1, heartRate: -1, hrv: HealthHRV());
         
         tryGetHealthInfo { info in
             
@@ -222,8 +254,12 @@ extension HealthObserver {
             if(info.heartRate >= 0){
                 health.heartRate = info.heartRate;
             }
+            if(info.hrv.hrv >= 0){
+                health.hrv = info.hrv;
+            }
+            
             if(health.steps >= 0 && health.excercise >= 0 && health.excerciseTime >= 0
-               && health.standHours >= 0 && health.heartRate >= 0){
+               && health.standHours >= 0 && health.heartRate >= 0 && health.hrv.hrv >= 0){
                 print(health)
                 completion(health)
             }
@@ -233,7 +269,7 @@ extension HealthObserver {
     
     func tryGetHealthInfo(completion: @escaping (HealthInfo) -> ()) {
 
-        var health = HealthInfo(steps: -1, excercise: -1, excerciseTime: -1, standHours: -1, heartRate: -1);
+        var health = HealthInfo(steps: -1, excercise: -1, excerciseTime: -1, standHours: -1, heartRate: -1, hrv: HealthHRV());
         
         let queue = DispatchQueue.global()
 
@@ -269,6 +305,15 @@ extension HealthObserver {
             self.getHeartRate { heartRate in
                 health.heartRate = heartRate
                 print("getHeartRate done")
+                completion(health)
+            }
+        }
+        queue.async {
+            self.getHRV { hrv in
+                let color = hrv < self.lastHRV ? Color.init(r: 230, g: 50, b: 0) : Color.init(r: 0, g: 200, b: 0)
+                health.hrv = HealthHRV(hrv: hrv, color: color);
+                self.lastHRV = hrv
+                print("getHRV done")
                 completion(health)
             }
         }
@@ -323,6 +368,11 @@ extension HealthObserver {
         fetchSample(quantityType: HKQuantityType(.heartRate), unit: HKUnit(from: "count/min"), completion: completion)
     }
 
+    func getHRV(completion: @escaping(Int) -> ()){
+        print("getHRV")
+
+        fetchSample(quantityType: HKQuantityType(.heartRateVariabilitySDNN), unit: HKUnit(from: "ms"), completion: completion)
+    }
 }
 
 extension DateComponents {

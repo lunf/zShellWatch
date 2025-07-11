@@ -142,11 +142,11 @@ struct HealthProvider: TimelineProvider {
     var healthObserver = HealthObserver()
 
     func placeholder(in context: Context) -> HealthEntry {
-        return HealthEntry(context: context, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60))
+        return HealthEntry(context: context, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60, hrv: HealthHRV(hrv: 50)))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (HealthEntry) -> ()) {
-        let entry = HealthEntry(context: context, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60))
+        let entry = HealthEntry(context: context, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60, hrv: HealthHRV(hrv: 50)))
             
         completion(entry)
     }
@@ -265,7 +265,7 @@ struct HealthEntry: TimelineEntry {
 #Preview(as: .accessoryRectangular) {
     HealthWidget()
 } timeline: {
-    HealthEntry(context: nil, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60))
+    HealthEntry(context: nil, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60, hrv: HealthHRV(hrv:50)))
 }
 
 #Preview(as: .accessoryCircular) {

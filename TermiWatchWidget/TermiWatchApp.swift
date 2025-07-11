@@ -46,55 +46,57 @@ struct TermiWatch: App {
                 }
                 Spacer()
                 
-                HStack{
-                    Text(LocalizedStringKey("Custom User")).frame(width: 100)
-                    TextField("UserName", text: $userName).foregroundStyle(.black).background(.white)
-                        .frame(width: 200,height: 50).font(.system(size: 18)).submitLabel(.done).onSubmit {
-                            userdefaults?.set(userName, forKey: qUserNameKey)
-                            userdefaults?.synchronize()
-                            viewModel.updateModel()
-                            endEditing()
-                        }
-                }.frame(width: 300,height: 50)
-                
-                HStack{
-                    PhotosPicker(LocalizedStringKey("Custom Left Top"), selection: $selectedSmallItem , maxSelectionCount: 1, matching: .images).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
-                        .onChange(of: selectedSmallItem) {
-                            Task{
-                                if let data = try await selectedSmallItem.first?.loadTransferable(type: Data.self) {
-                                    print("Image data loaded: \(data.count) bytes")
-
-                                    if let uiImage = UIImage(data: data){
-                                        handleSmallImage(image: uiImage)
+                VStack{
+                    HStack{
+                        Text(LocalizedStringKey("Custom User")).frame(width: 100)
+                        TextField("UserName", text: $userName).foregroundStyle(.black).background(.white)
+                            .frame(width: 200,height: 50).font(.system(size: 18)).submitLabel(.done).onSubmit {
+                                userdefaults?.set(userName, forKey: qUserNameKey)
+                                userdefaults?.synchronize()
+                                viewModel.updateModel()
+                                endEditing()
+                            }
+                    }.frame(width: 300,height: 50)
+                    
+                    HStack{
+                        PhotosPicker(LocalizedStringKey("Custom Left Top"), selection: $selectedSmallItem , maxSelectionCount: 1, matching: .images).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
+                            .onChange(of: selectedSmallItem) {
+                                Task{
+                                    if let data = try await selectedSmallItem.first?.loadTransferable(type: Data.self) {
+                                        print("Image data loaded: \(data.count) bytes")
+                                        
+                                        if let uiImage = UIImage(data: data){
+                                            handleSmallImage(image: uiImage)
+                                        }
+                                        selectedSmallItem = []
                                     }
-                                    selectedSmallItem = []
                                 }
                             }
-                        }
-                }
-                
-                HStack{
-                    PhotosPicker(LocalizedStringKey("Custom BG"), selection: $selectedBGItem , maxSelectionCount: 1, matching: .images).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
-                        .onChange(of: selectedBGItem) {
-                            Task{
-                                if let data = try await selectedBGItem.first?.loadTransferable(type: Data.self) {
-                                    print("Image data loaded: \(data.count) bytes")
-
-                                    if let uiImage = UIImage(data: data){
-                                        handleBGImage(image: uiImage)
+                    }
+                    
+                    HStack{
+                        PhotosPicker(LocalizedStringKey("Custom BG"), selection: $selectedBGItem , maxSelectionCount: 1, matching: .images).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
+                            .onChange(of: selectedBGItem) {
+                                Task{
+                                    if let data = try await selectedBGItem.first?.loadTransferable(type: Data.self) {
+                                        print("Image data loaded: \(data.count) bytes")
+                                        
+                                        if let uiImage = UIImage(data: data){
+                                            handleBGImage(image: uiImage)
+                                        }
+                                        selectedBGItem = []
                                     }
-                                    selectedBGItem = []
                                 }
                             }
-                        }
+                    }
+                    
+                    HStack(alignment: .bottom, content: {
+                        
+                        Button(LocalizedStringKey("Sync Watch Face"), action: addWatchFace).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
+                        
+                    })
+                    Spacer()
                 }
-                
-                HStack(alignment: .bottom, content: {
-
-                    Button(LocalizedStringKey("Sync Watch Face"), action: addWatchFace).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
-
-                })
-                Spacer()
             }
            
         }

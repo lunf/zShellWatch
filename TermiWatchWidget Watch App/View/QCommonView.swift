@@ -143,7 +143,15 @@ struct HealthRectangularView : View {
             HStack {
                 MyText("[L_HR]")
                 Image(systemName: "heart.circle").imageScale(.small).foregroundStyle(colorHR)
-                MyText("\(health.heartRate)").foregroundStyle(colorHR)
+                HStack(spacing: 2){
+                    MyText("\(health.heartRate)").foregroundStyle(colorHR)
+                    MyText("bpm",fontSize: 10).frame(alignment: .leading)
+                }
+                Image(systemName: "bolt.heart").imageScale(.small).foregroundStyle(health.hrv.color)
+                HStack(spacing: 2){
+                    MyText("\(health.hrv.hrv)").foregroundStyle(health.hrv.color)
+                    MyText("ms",fontSize: 10).frame(alignment: .leading).lineSpacing(0)
+                }
             }.frame(height: rowHeight)
             
             HStack {
@@ -202,7 +210,7 @@ struct MyText: View {
               
         WeatherRectangularView(context: nil, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "局部小雨", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "局部大雪", symbol: "snow", temperature: "-11℃",humidity: "50%"),alert: "", dateText: "周末"))
         
-        HealthRectangularView(context: nil, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60))
+        HealthRectangularView(context: nil, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60, hrv: HealthHRV(hrv:50)))
     }
     
 })
