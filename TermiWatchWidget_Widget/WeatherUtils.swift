@@ -16,17 +16,17 @@ struct WeatherInfo {
     let current: QWeather
     let weathers: [QWeather] // 0为当前
     let alerts: [String]
-    
+
     init(current: QWeather, weathers: [QWeather], alerts: [String]) {
         self.current = current
         self.weathers = weathers
         self.alerts = alerts
     }
-    
+
     init(){
         self.init(current: QWeather(), weathers: [QWeather()], alerts: [String()] )
     }
-    
+
     init(current: HFWeatherNow, weathers: [HFWeather24h]){
         var weathers2 = weathers.map({ hf in
             QWeather(hfWeather: hf)
@@ -66,7 +66,7 @@ struct QWeather{
     let symbol: String
     let temperature: QTemperature
     let humidity: String
-    
+
     init(date: Date, condition: String, symbol: String, temperature: String, humidity: String) {
         self.date = date
         self.condition = condition
@@ -77,7 +77,7 @@ struct QWeather{
     init() {
         self.init(date: Date() , condition: "", symbol: "sparkles", temperature: "",humidity: "")
     }
-    
+
     init(currentWeather: CurrentWeather, tempMF: MeasurementFormatter){
         let condition = currentWeather.condition
         let symbol = currentWeather.symbolName
@@ -108,38 +108,40 @@ func getWeather(location: CLLocation, afterHours: Int) async throws -> WeatherIn
 
     var result: WeatherInfo = WeatherInfo()
     do {
-        
+
         let formatter = MeasurementFormatter()
         formatter.locale = .autoupdatingCurrent
         formatter.unitStyle = .short
         formatter.numberFormatter.maximumFractionDigits = 0
-        
+
         let calendar = Calendar.current
         let endDate = calendar.date(byAdding: .hour, value: afterHours ,to: Date.now)
 
         let weather = try await weatherService.weather(for: location,including: .current, .hourly(startDate: Date.now, endDate: endDate!),.alerts)
-                
+
         let current = QWeather(currentWeather: weather.0, tempMF: formatter )
 
         var afters = [QWeather]()
-        for i in 0..<afterHours{
-            let after = QWeather(hourWeather: weather.1.forecast[i], tempMF: formatter )
+        for hourWeather in weather.1.forecast.prefix(afterHours){
+            let after = QWeather(hourWeather: hourWeather, tempMF: formatter )
             afters.append(after)
         }
-        
+
         var alerts = [String]()
-        for i in 0..<afterHours{
-            let alert = weather.2?[i].summary ?? ""
-            alerts.append(alert)
+        for alert in (weather.2 ?? []).prefix(afterHours) {
+            alerts.append(alert.summary)
         }
-        
+        while alerts.count < afterHours {
+            alerts.append("")
+        }
+
         result = WeatherInfo(current: current, weathers: afters, alerts: alerts)
 
     }catch {
-        
+
         print("WatchWeatherCall error: \(error.localizedDescription)")
     }
-        
+
     return result
 }
 
@@ -170,7 +172,7 @@ struct HFWeatherNow : Codable {
     let icon: String
     let temp: String
     let humidity: String
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         obsTime = try container.decode(Date.self, forKey: .obsTime)
@@ -198,7 +200,7 @@ struct HFWeather24h : Codable {
     let icon: String
     let temp: String
     let humidity: String
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         fxTime = try container.decode(Date.self, forKey: .fxTime)
@@ -224,76 +226,82 @@ struct HFWeather24h : Codable {
 struct HFWeatherNowResponse: Codable {
     let code: String
     let now: HFWeatherNow
-    
+
 }
 struct HFWeather24hResponse: Codable {
     let code: String
     let hourly: [HFWeather24h]
-    
+
 }
 func getHFWeather(location: CLLocation, handler: (@escaping (WeatherInfo) -> Void) ) {
-    
+
     let sessionConfig = URLSessionConfiguration.default
     sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
     sessionConfig.urlCache = nil
-    
+
     var request = URLRequest(url: HFWeatherNowAPI(location: location))
     request.httpMethod = "GET"
     request.setValue("UTF-8", forHTTPHeaderField:"Charset")
     request.setValue("application/json", forHTTPHeaderField:"Content-Type")
-    
+
     var request2 = URLRequest(url: HFWeather24hAPI(location: location))
     request2.httpMethod = "GET"
     request2.setValue("UTF-8", forHTTPHeaderField:"Charset")
     request2.setValue("application/json", forHTTPHeaderField:"Content-Type")
-    
+
     let decoder = JSONDecoder()
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd'T'HH:mmZ"
     decoder.dateDecodingStrategy = .formatted(formatter)
-    
+
     URLSession(configuration: sessionConfig).dataTask(with: request) { data, response, error in
         do {
             if(data == nil){
                 print(error ?? " error")
+                handler(WeatherInfo())
                 return
             }
             let result = try decoder.decode(HFWeatherNowResponse.self, from: data!)
             if(result.code == "200"){
-                
+
                 URLSession(configuration: sessionConfig).dataTask(with: request2) { data, response, error in
                     do {
-                        
-                        let result2 = try decoder.decode(HFWeather24hResponse.self, from: data!)
+                        guard let data = data else {
+                            print(error ?? " error")
+                            handler(WeatherInfo())
+                            return
+                        }
+
+                        let result2 = try decoder.decode(HFWeather24hResponse.self, from: data)
                         if(result2.code == "200"){
                             let hf = WeatherInfo(current: result.now, weathers: result2.hourly)
                             handler(hf)
                             print(hf)
                         }else{
                             print("HF error \(result2.code)")
-                            
+
                             handler(WeatherInfo())
                         }
-                        
+
                     } catch {
                         print("无法连接到服务器 \(error)")
                         handler(WeatherInfo())
                     }
                 }.resume()
 
-                
+
             }else{
                 print("HF error \(result.code)")
-                
+
                 handler(WeatherInfo())
             }
-            
+
         } catch {
             print("无法连接到服务器 \(error)")
             handler(WeatherInfo())
         }
     }.resume()
-    
+
 }
 
 class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
@@ -313,17 +321,17 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
 
     var locationManager: CLLocationManager?
     private var handler: ((CLLocation) -> Void)?
-    
+
 //    var lastLati = UserDefaults.standard.object(forKey: "LastLocation.lati") ?? 0
 //    var lastLong = UserDefaults.standard.object(forKey: "LastLocation.long") ?? 0
 //    var updateTime:Date = UserDefaults.standard.object(forKey: "LastLocationTime") as? Date ?? Date.init(timeIntervalSinceNow: -30)
-    
+
     override init() {
         super.init()
         DispatchQueue.main.async {
             self.locationManager = CLLocationManager()
             self.locationManager!.delegate = self
-            
+
             let status = self.locationManager!.authorizationStatus
             print("location status \(status)")
             if status == .notDetermined {
@@ -331,10 +339,10 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
             }
         }
     }
-    
+
     func fetchLocation(handler: @escaping (CLLocation) -> Void) {
         self.handler = handler
-        
+
         print("CL \(lastLocation) Time \(lastLocationTime)")
 
         let now:Double = Date().timeIntervalSince1970
@@ -364,14 +372,14 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
 //        UserDefaults.standard.set(updateTime, forKey: "LastLocationTime")
         manager.stopUpdatingLocation()
 
-        
+
         lastLocation = location.string()
         lastLocationTime = Date().since1970TimeIntervalString();
-        
+
         self.handler!(location)
     }
-    
-    
+
+
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("didUpdateLocations \(error)")
         let location = CLLocation(string: lastLocation)
@@ -380,29 +388,29 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
 }
 
 extension CLLocation{
-    
+
     func string() -> String{
         return "\(self.coordinate.latitude),\(self.coordinate.longitude)"
     }
-  
+
     convenience init(string: String){
         let array = string.components(separatedBy: CharacterSet(charactersIn: ","))
         let latitude = Double(array[0]) ?? 0
         let longitude = Double(array[1]) ?? 0
-        
+
         self.init(latitude: latitude, longitude: longitude)
     }
-    
+
 }
 extension Date{
-    
+
     func since1970TimeIntervalString() -> String{
         return "\(timeIntervalSince1970)"
     }
-    
+
     init(since1970: String){
         let time = TimeInterval(Double(since1970) ?? 0)
         self.init(timeIntervalSince1970: time)
     }
-    
+
 }

@@ -26,12 +26,12 @@ class QTermiViewModel {
                 if(HFWeatherKey.count==0){
                     let weather = try await getWeather(location: location, afterHours: 2)
                     DispatchQueue.main.async {
-                        self.weather = WeatherViewInfo(current: weather.weathers[0], after1Hours: weather.weathers[1],alert: weather.alerts[0], dateText: Date().currentDate())
+                        self.weather = self.makeWeatherViewInfo(from: weather, dateText: Date().currentDate())
                     }
                 }else{
                     getHFWeather(location: location) { weather in
                         DispatchQueue.main.async {
-                            self.weather = WeatherViewInfo(current: weather.weathers[0], after1Hours: weather.weathers[1],alert: weather.alerts[0], dateText: Date().currentDate())
+                            self.weather = self.makeWeatherViewInfo(from: weather, dateText: Date().currentDate())
                         }
                     }
                 }
@@ -47,6 +47,15 @@ class QTermiViewModel {
         DispatchQueue.main.async {
             self.smallImage = leftTopImageName()
         }
+    }
+
+    private func makeWeatherViewInfo(from weather: WeatherInfo, dateText: String? = nil) -> WeatherViewInfo {
+        guard weather.weathers.count >= 2 else {
+            return WeatherViewInfo()
+        }
+
+        let alert = weather.alerts.first ?? ""
+        return WeatherViewInfo(current: weather.weathers[0], after1Hours: weather.weathers[1], alert: alert, dateText: dateText)
     }
 }
 #else
@@ -65,11 +74,11 @@ final class QTermiViewModel: ObservableObject {
                 if(HFWeatherKey.count==0){
                     let weather = try await getWeather(location: location, afterHours: 2)
                     DispatchQueue.main.async {
-                        self.weather = WeatherViewInfo(current: weather.weathers[0], after1Hours: weather.weathers[1],alert: weather.alerts[0])
+                        self.weather = self.makeWeatherViewInfo(from: weather)
                     }
                 }else{
                     getHFWeather(location: location) { weather in
-                        self.weather = WeatherViewInfo(current: weather.weathers[0], after1Hours: weather.weathers[1],alert: weather.alerts[0])
+                        self.weather = self.makeWeatherViewInfo(from: weather)
                     }
                 }
             }
@@ -81,6 +90,15 @@ final class QTermiViewModel: ObservableObject {
             }
         }
         
+    }
+
+    private func makeWeatherViewInfo(from weather: WeatherInfo, dateText: String? = nil) -> WeatherViewInfo {
+        guard weather.weathers.count >= 2 else {
+            return WeatherViewInfo()
+        }
+
+        let alert = weather.alerts.first ?? ""
+        return WeatherViewInfo(current: weather.weathers[0], after1Hours: weather.weathers[1], alert: alert, dateText: dateText)
     }
 }
 

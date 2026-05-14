@@ -21,7 +21,7 @@ struct CircularWidget: Widget{
     let kind: String = "CircularWidget"
 
     var body: some WidgetConfiguration {
-        
+
         StaticConfiguration(kind: kind, provider: CircularProvider()) { entry in
             CircularWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
@@ -34,7 +34,7 @@ struct WeatherWidget: Widget {
     let kind: String = "WeatherWidget"
 
     var body: some WidgetConfiguration {
-        
+
         StaticConfiguration(kind: kind, provider: WeatherProvider()) { entry in
             WeatherWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
@@ -47,7 +47,7 @@ struct HealthWidget: Widget {
     let kind: String = "HealthWidget"
 
     var body: some WidgetConfiguration {
-        
+
         StaticConfiguration(kind: kind, provider: HealthProvider()) { entry in
             HealthWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
@@ -57,7 +57,7 @@ struct HealthWidget: Widget {
 }
 
 struct CircularProvider: TimelineProvider {
-  
+
     func placeholder(in context: Context) -> CircularEntry {
         return CircularEntry(image: leftTopImageName(), string: "Q")
     }
@@ -66,7 +66,7 @@ struct CircularProvider: TimelineProvider {
         let entry = CircularEntry(image: leftTopImageName(), string: "Q")
         completion(entry)
     }
-    
+
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let entry = CircularEntry(image: leftTopImageName(), string: "Q")
         let timeline = Timeline(entries: [entry], policy: .never)
@@ -76,7 +76,7 @@ struct CircularProvider: TimelineProvider {
 }
 
 struct WeatherProvider: TimelineProvider {
-    
+
     var widgetLocationManager = WidgetLocationManager()
 
     func placeholder(in context: Context) -> WeatherEntry {
@@ -90,7 +90,7 @@ struct WeatherProvider: TimelineProvider {
 
         completion(entry)
     }
-    
+
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let formatter = getCurrentFormatter()
 
@@ -99,46 +99,44 @@ struct WeatherProvider: TimelineProvider {
 
                 if(HFWeatherKey.count == 0){
                     let weather = try await getWeather(location: location, afterHours: 6)
-                    
-                    var entries = [WeatherEntry]()
-                    for i in 0..<5{
-                        let dateStr = formatter.noYear(from: weather.weathers[i].date)
-
-                        let info = WeatherViewInfo(current: weather.weathers[i], after1Hours: weather.weathers[i+1], alert: weather.alerts[0], dateText: dateStr)
-                        
-                        let entry = WeatherEntry(context: context, date: info.current.date, weather: info)
-                        entries.append(entry)
-                    }
-                    
+                    let entries = makeWeatherEntries(from: weather, context: context, formatter: formatter, maxCount: 5)
                     let timeline = Timeline(entries: entries, policy: .atEnd)
-                    
+
                     completion(timeline)
                 }else{
-                    
-                    getHFWeather(location: location) { weather in
-                        var entries = [WeatherEntry]()
-                        for i in 0..<12{
-                            let dateStr = formatter.noYear(from: weather.weathers[i].date)
 
-                            let info = WeatherViewInfo(current: weather.weathers[i], after1Hours: weather.weathers[i+1], alert: weather.alerts[0], dateText: dateStr)
-                            
-                            let entry = WeatherEntry(context:context, date: info.current.date, weather: info)
-                            entries.append(entry)
-                        }
-                        
+                    getHFWeather(location: location) { weather in
+                        let entries = makeWeatherEntries(from: weather, context: context, formatter: formatter, maxCount: 12)
                         let timeline = Timeline(entries: entries, policy: .atEnd)
-                        
+
                         completion(timeline)
                     }
-                    
+
                 }
             }
         })
     }
+
+    private func makeWeatherEntries(from weather: WeatherInfo, context: Context, formatter: DateFormatter, maxCount: Int) -> [WeatherEntry] {
+        let entryCount = min(maxCount, max(0, weather.weathers.count - 1))
+        guard entryCount > 0 else {
+            return [WeatherEntry(context: context, weather: WeatherViewInfo())]
+        }
+
+        return (0..<entryCount).map { index in
+            let current = weather.weathers[index]
+            let after1Hours = weather.weathers[index + 1]
+            let alert = weather.alerts.indices.contains(index) ? weather.alerts[index] : ""
+            let dateStr = formatter.noYear(from: current.date)
+            let info = WeatherViewInfo(current: current, after1Hours: after1Hours, alert: alert, dateText: dateStr)
+
+            return WeatherEntry(context: context, date: info.current.date, weather: info)
+        }
+    }
 }
 
 struct HealthProvider: TimelineProvider {
-    
+
     var healthObserver = HealthObserver()
 
     func placeholder(in context: Context) -> HealthEntry {
@@ -147,10 +145,10 @@ struct HealthProvider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (HealthEntry) -> ()) {
         let entry = HealthEntry(context: context, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60, hrv: HealthHRV(hrv: 50)))
-            
+
         completion(entry)
     }
-    
+
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var refresh = Calendar.current.date(byAdding: .minute, value: healthRefreshInterval, to: Date()) ?? Date()
         if(isEveningNow()){
@@ -158,9 +156,9 @@ struct HealthProvider: TimelineProvider {
         }
         healthObserver.getHealthInfo { health in
             let entry = HealthEntry( context: context, health: health)
-            
+
             let timeline = Timeline(entries: [entry], policy: .after(refresh))
-            
+
             completion(timeline)
         }
     }
@@ -168,9 +166,9 @@ struct HealthProvider: TimelineProvider {
        let date = Date()
        let calendar = Calendar.current
        let components = calendar.component(.hour, from: date)
-       
+
        // 定义晚上的时间范围，例如从22:00到06:00
-       return components >= 22 && components < 6
+       return components >= 22 || components < 6
    }
 }
 
@@ -182,7 +180,7 @@ struct CircularWidgetEntryView : View{
         switch family {
         case .accessoryCircular:
             SmallCircularView( image: entry.image, text: entry.string)
-            
+
         default:
             VStack{}
         }
@@ -192,16 +190,16 @@ struct CircularWidgetEntryView : View{
 struct WeatherWidgetEntryView : View {
     var entry: WeatherProvider.Entry
     @Environment(\.widgetFamily) var family
-    
+
 
     var body: some View {
         switch family {
         case .accessoryCircular:
-            
+
             Text("Q")
-             
+
         case .accessoryRectangular:
-            
+
             WeatherRectangularView(context: entry.context, weather: entry.weather)
 
         default:
@@ -217,13 +215,13 @@ struct HealthWidgetEntryView : View {
     var body: some View {
         switch family {
         case .accessoryCircular:
-            
+
             Text("V")
-                
+
         case .accessoryRectangular:
 
             HealthRectangularView(context: entry.context, health: entry.health)
-            
+
         default:
             VStack{}
         }
