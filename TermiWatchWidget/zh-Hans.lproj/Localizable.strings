@@ -22,6 +22,12 @@
 "Custom Left Top" = "自定义左上图标";
 "Configure Lines" = "配置显示行";
 "Face Lines" = "表盘显示行";
+"Theme" = "主题";
+"Default Theme" = "默认";
+"Git Theme" = "Git";
+"Cloud Theme" = "云";
+"Icon Theme" = "图标";
+"Colorful Theme" = "彩色";
 "Displayed Lines" = "已显示行";
 "Available Lines" = "可用行";
 "Edit" = "编辑";

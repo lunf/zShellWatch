@@ -21,6 +21,12 @@
 "Custom Left Top" = "Custom Left Top";
 "Configure Lines" = "Configure Lines";
 "Face Lines" = "Face Lines";
+"Theme" = "Theme";
+"Default Theme" = "Default";
+"Git Theme" = "Git";
+"Cloud Theme" = "Cloud";
+"Icon Theme" = "Icon";
+"Colorful Theme" = "Colorful";
 "Displayed Lines" = "Displayed Lines";
 "Available Lines" = "Available Lines";
 "Edit" = "Edit";

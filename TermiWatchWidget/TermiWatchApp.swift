@@ -13,11 +13,27 @@ import OSLog
 
 private let termiWatchLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "App")
 private let watchPreviewWidth: CGFloat = 200
-private let watchPreviewHeight: CGFloat = 220
+private let watchPreviewMinimumHeight: CGFloat = 220
 private let watchPreviewCornerRadius: CGFloat = 36
 private let watchPreviewControlGap: CGFloat = 16
 private let watchPreviewStatusPadding: CGFloat = 14
 private let watchPreviewStatusContentInset: CGFloat = 24
+private let watchPreviewContentInset: CGFloat = 8
+private let themePickerTopInset: CGFloat = 8
+
+private func watchPreviewHeight(lines: [TermiFaceLine], theme: TermiFaceTheme) -> CGFloat {
+    let visibleLineWeight = max(lines.reduce(CGFloat(0)) { $0 + termiFaceLineHeightWeight($1, theme: theme) }, 1)
+    let rowHeight = qRowHeight + 0.5
+    let rowSpacing = CGFloat(max(lines.count - 1, 0)) * qFaceRowSpacing
+    let contentHeight = qFacePaddingTop + qFacePaddingBottom + watchPreviewStatusContentInset + (visibleLineWeight * rowHeight) + rowSpacing
+    return max(watchPreviewMinimumHeight, ceil(contentHeight + watchPreviewContentInset))
+}
+
+private func watchPreviewReservedHeight(lines: [TermiFaceLine]) -> CGFloat {
+    TermiFaceTheme.allCases
+        .map { watchPreviewHeight(lines: lines, theme: $0) }
+        .max() ?? watchPreviewMinimumHeight
+}
 
 @main
 struct TermiWatch: App {
@@ -35,6 +51,7 @@ struct TermiWatch: App {
     @State private var isShowingStatusPanel = false
     @State private var isShowingFaceLineEditor = false
     @State private var faceLines = selectedFaceLines()
+    @State private var faceTheme = selectedFaceTheme()
     @State private var didRunInitialRefresh = false
     @State var userName = terminalName()
     @State var hostName = machineName()
@@ -44,18 +61,25 @@ struct TermiWatch: App {
             NavigationStack {
                 GeometryReader { proxy in
                     let previewWidth = min(watchPreviewWidth, max(0, proxy.size.width - 32))
+                    let previewHeight = watchPreviewHeight(lines: faceLines, theme: faceTheme)
+                    let reservedPreviewHeight = watchPreviewReservedHeight(lines: faceLines)
 
                     ScrollView {
-                        VStack(spacing: watchPreviewControlGap) {
+                        VStack(spacing: 0) {
                             Color.clear.frame(height: watchPreviewControlGap)
 
-                            WatchFacePreview(viewModel: viewModel, faceLines: faceLines)
-                                .frame(width: previewWidth, height: watchPreviewHeight, alignment: .top)
+                            WatchFacePreview(viewModel: viewModel, faceLines: faceLines, theme: faceTheme)
+                                .frame(width: previewWidth, height: previewHeight, alignment: .top)
                                 .clipShape(RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous))
                                 .overlay {
                                     RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous)
-                                        .stroke(.green, lineWidth: 1)
+                                        .stroke(faceTheme.accentColor, lineWidth: 1)
                                 }
+                                .frame(height: reservedPreviewHeight, alignment: .top)
+
+                            ThemePickerStrip(selectedTheme: $faceTheme, onThemeChange: saveThemeSelection)
+                                .padding(.horizontal, 16)
+                                .padding(.top, watchPreviewControlGap + themePickerTopInset)
                         }
                         .frame(maxWidth: .infinity, alignment: .top)
                     }
@@ -177,6 +201,7 @@ struct TermiWatch: App {
     func refreshWidgets() {
         userdefaults?.set(userName, forKey: qUserNameKey)
         userdefaults?.set(hostName, forKey: qMachineNameKey)
+        saveSelectedFaceTheme(faceTheme, userDefaults: userdefaults)
         userdefaults?.synchronize()
         session.syncSettingsToWatch()
 
@@ -208,9 +233,16 @@ struct TermiWatch: App {
         refreshWidgets()
     }
 
+    func saveThemeSelection(_ theme: TermiFaceTheme) {
+        faceTheme = theme
+        saveSelectedFaceTheme(theme, userDefaults: userdefaults)
+        refreshWidgets()
+    }
+
     func savePromptIdentity() {
         userdefaults?.set(userName, forKey: qUserNameKey)
         userdefaults?.set(hostName, forKey: qMachineNameKey)
+        saveSelectedFaceTheme(faceTheme, userDefaults: userdefaults)
         userdefaults?.synchronize()
         refreshWidgets()
     }
@@ -273,20 +305,63 @@ struct TermiWatch: App {
 
 }
 
+struct ThemePickerStrip: View {
+    @Binding var selectedTheme: TermiFaceTheme
+    let onThemeChange: (TermiFaceTheme) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(TermiFaceTheme.allCases) { theme in
+                    Button {
+                        selectedTheme = theme
+                        onThemeChange(theme)
+                    } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: theme.systemImage)
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(theme.accentColor)
+                                .frame(width: 36, height: 36)
+                                .background(.black)
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                            Text(LocalizedStringKey(theme.titleKey))
+                                .font(.caption)
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                        }
+                        .frame(width: 96, height: 78)
+                        .background(selectedTheme == theme ? theme.accentColor.opacity(0.22) : Color.white.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(selectedTheme == theme ? theme.accentColor : Color.white.opacity(0.14), lineWidth: selectedTheme == theme ? 2 : 1)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .accessibilityLabel(LocalizedStringKey("Theme"))
+    }
+}
+
 struct WatchFacePreview: View {
     let viewModel: QTermiViewModel
     let faceLines: [TermiFaceLine]
+    let theme: TermiFaceTheme
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            ContentView(viewModel: viewModel, faceLines: faceLines)
-                .foregroundStyle(.white)
+            ContentView(viewModel: viewModel, faceLines: faceLines, theme: theme)
+                .foregroundStyle(theme.textColor)
                 .padding(.top, watchPreviewStatusContentInset)
 
             TimelineView(.periodic(from: Date(), by: 60)) { timeline in
                 Text(Self.statusTimeFormatter.string(from: timeline.date))
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textColor)
                     .monospacedDigit()
                     .padding(.top, watchPreviewStatusPadding)
                     .padding(.trailing, watchPreviewStatusPadding)

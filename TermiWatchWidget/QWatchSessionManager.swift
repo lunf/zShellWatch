@@ -60,6 +60,10 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
             message[qFaceLineOrderKey] = faceLineOrder
         }
 
+        if let faceTheme = userdefaults?.string(forKey: qFaceThemeKey) {
+            message[qFaceThemeKey] = faceTheme
+        }
+
         sendApplicationContext(message)
         sendMessage(message: message)
     }
@@ -164,6 +168,10 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
 
         if let faceLineOrder = message[qFaceLineOrderKey] as? [String] {
             userdefaults?.set(faceLineOrder, forKey: qFaceLineOrderKey)
+        }
+
+        if let faceTheme = message[qFaceThemeKey] as? String {
+            userdefaults?.set(faceTheme, forKey: qFaceThemeKey)
         }
 
         if let faceImage = message[qFaceImageKey] as? String {
