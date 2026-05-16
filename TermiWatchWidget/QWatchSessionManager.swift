@@ -6,11 +6,22 @@
 //
 
 import WatchConnectivity
+import OSLog
+import WidgetKit
+
+private let watchSessionLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "WatchSession")
+private let watchSessionSyncCommandKey = "syncCommand"
+private let watchSessionSyncSettingsCommand = "syncSettings"
+private let watchSessionResetBackgroundsCommand = "resetBackgrounds"
+
+extension Notification.Name {
+    static let watchSessionDidUpdateConfiguration = Notification.Name("watchSessionDidUpdateConfiguration")
+}
 
 class WatchSessionManager: NSObject, WCSessionDelegate {
     
     static let shared = WatchSessionManager()
-    let userdefaults = UserDefaults.init(suiteName: qGroupBundleID)
+    let userdefaults = qUserdefaults
 
     private override init() {
         super.init()
@@ -22,16 +33,45 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
     }
         
     func sendImage(images: [String: URL]){
-        if WCSession.default.isReachable {
-            for (iKey,iValue) in images{
-                let name = ["name" : iKey]
-                WCSession.default.transferFile(iValue, metadata: name)
-            }
+        guard WCSession.isSupported() else { return }
+
+        for (iKey,iValue) in images{
+            let name = ["name" : iKey]
+            WCSession.default.transferFile(iValue, metadata: name)
         }
+    }
+
+    func syncSettingsToWatch() {
+        var message: [String: Any] = [watchSessionSyncCommandKey: watchSessionSyncSettingsCommand]
+
+        if let userName = userdefaults?.string(forKey: qUserNameKey) {
+            message[qUserNameKey] = userName
+        }
+
+        if let machineName = userdefaults?.string(forKey: qMachineNameKey) {
+            message[qMachineNameKey] = machineName
+        }
+
+        if let faceImage = userdefaults?.string(forKey: qFaceImageKey) {
+            message[qFaceImageKey] = faceImage
+        }
+
+        if let faceLineOrder = userdefaults?.stringArray(forKey: qFaceLineOrderKey) {
+            message[qFaceLineOrderKey] = faceLineOrder
+        }
+
+        sendApplicationContext(message)
+        sendMessage(message: message)
+    }
+
+    func resetWatchBackgrounds() {
+        let message: [String: Any] = [watchSessionSyncCommandKey: watchSessionResetBackgroundsCommand]
+        sendApplicationContext(message)
+        sendMessage(message: message)
     }
     
     func session(_ session: WCSession, didReceive file: WCSessionFile) {
-        print("Received File : \(String(describing: file.metadata))")
+        watchSessionLogger.info("Received file: \(String(describing: file.metadata), privacy: .public)")
         let key = file.metadata?["name"] as? String
         let path = FileManager.default.saveRecivedImage(srcURL: file.fileURL)
         if((key != nil) && (path != nil)){
@@ -42,6 +82,7 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
                 userdefaults?.setValue(custom, forKey: qCustomImageKey)
             }
             userdefaults?.synchronize()
+            reloadWidgetTimelines()
         }
     }
     
@@ -49,50 +90,105 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         if WCSession.default.isReachable {
          
             WCSession.default.sendMessageData(data, replyHandler: nil) { error in
-                print("Error sending messageData to Apple Watch: \(error.localizedDescription)")
+                watchSessionLogger.error("Error sending messageData to Apple Watch: \(error.localizedDescription, privacy: .public)")
             }
             
         } else {
-            print("WCSession is not reachable.")
+            watchSessionLogger.warning("WCSession is not reachable.")
         }
     }
     
     func session(_ session: WCSession, didReceiveMessageData messageData: Data) {
-        print("Received messageData : \(messageData.count)")
+        watchSessionLogger.info("Received messageData: \(messageData.count, privacy: .public)")
 
       
     }
     
-    // 发送消息
+    // Send message
     func sendMessage(message: [String: Any]) {
         if WCSession.default.isReachable {
             WCSession.default.sendMessage(message, replyHandler: nil) { error in
-                print("Error sending message to Apple Watch: \(error.localizedDescription)")
+                watchSessionLogger.error("Error sending message to Apple Watch: \(error.localizedDescription, privacy: .public)")
             }
         } else {
-            print("WCSession is not reachable.")
+            watchSessionLogger.warning("WCSession is not reachable.")
         }
     }
     
-    //  接收到的消息
+    // Received message
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
-        print("Received message : \(message)")
+        watchSessionLogger.info("Received message: \(String(describing: message), privacy: .public)")
+        applySettings(message)
+    }
+
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) {
+        watchSessionLogger.info("Received application context: \(String(describing: applicationContext), privacy: .public)")
+        applySettings(applicationContext)
     }
 #if os(iOS)
     func sessionDidBecomeInactive(_ session: WCSession) {
-        print("Session did become inactive.")
+        watchSessionLogger.info("Session did become inactive.")
     }
 
     func sessionDidDeactivate(_ session: WCSession) {
-        print("Session did deactivate.")
+        watchSessionLogger.info("Session did deactivate.")
     }
 #endif
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         if let error = error {
-            print("Session activation failed with error: \(error.localizedDescription)")
+            watchSessionLogger.error("Session activation failed with error: \(error.localizedDescription, privacy: .public)")
         } else {
-            print("Session activated with state: \(activationState)")
+            watchSessionLogger.info("Session activated with state: \(String(describing: activationState), privacy: .public)")
+        }
+    }
+
+    private func sendApplicationContext(_ message: [String: Any]) {
+        guard WCSession.isSupported() else { return }
+
+        do {
+            try WCSession.default.updateApplicationContext(message)
+        } catch {
+            watchSessionLogger.error("Error updating application context: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func applySettings(_ message: [String: Any]) {
+        if let userName = message[qUserNameKey] as? String {
+            userdefaults?.set(userName, forKey: qUserNameKey)
+        }
+
+        if let machineName = message[qMachineNameKey] as? String {
+            userdefaults?.set(machineName, forKey: qMachineNameKey)
+        }
+
+        if let faceLineOrder = message[qFaceLineOrderKey] as? [String] {
+            userdefaults?.set(faceLineOrder, forKey: qFaceLineOrderKey)
+        }
+
+        if let faceImage = message[qFaceImageKey] as? String {
+            userdefaults?.set(faceImage, forKey: qFaceImageKey)
+        }
+
+        if let command = message[watchSessionSyncCommandKey] as? String,
+           command == watchSessionResetBackgroundsCommand {
+            userdefaults?.setValue(nil, forKey: qWeatherImageKey)
+            userdefaults?.setValue(nil, forKey: qHealthImageKey)
+            userdefaults?.setValue(nil, forKey: qFaceImageKey)
+            userdefaults?.setValue(nil, forKey: qLeftTopImageKey)
+        }
+
+        userdefaults?.synchronize()
+        reloadWidgetTimelines()
+    }
+
+    private func reloadWidgetTimelines() {
+        WidgetCenter.shared.reloadTimelines(ofKind: "HealthWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "WeatherWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "CircularWidget")
+
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .watchSessionDidUpdateConfiguration, object: nil)
         }
     }
 }

@@ -6,21 +6,23 @@
 //
 
 import SwiftUI
-import HealthKit
 
 struct ContentView: View {
     let viewModel: QTermiViewModel
+    let configuredFaceLines: [TermiFaceLine]?
+    @State private var storedFaceLines = selectedFaceLines()
+
+    init(viewModel: QTermiViewModel, faceLines: [TermiFaceLine]? = nil) {
+        self.viewModel = viewModel
+        self.configuredFaceLines = faceLines
+    }
 
     var body: some View {
-        VStack{
-            HStack{
-                SmallCircularView(image: viewModel.smallImage).frame(width: 50,height: 50, alignment: .leading)
-                Spacer()
+        TermiFaceView(context: nil, weather: viewModel.weather, health: viewModel.health, lines: configuredFaceLines ?? storedFaceLines)
+            .persistentSystemOverlays(.hidden)
+            .onReceive(NotificationCenter.default.publisher(for: .watchSessionDidUpdateConfiguration)) { _ in
+                storedFaceLines = selectedFaceLines()
             }
-            
-            WeatherRectangularView(context: nil, weather: viewModel.weather)
-            HealthRectangularView(context: nil, health: viewModel.health)
-        }
     }
 }
 

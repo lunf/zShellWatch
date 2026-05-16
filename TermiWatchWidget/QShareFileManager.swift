@@ -7,11 +7,17 @@
 
 import Foundation
 import UIKit
+import OSLog
+import ImageIO
+
+private let shareFileLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "ShareFile")
+private let maxSharedImageBytes = 2_000_000
+private let maxSharedImagePixels = 2_000_000
 
 extension FileManager{
     
     func makeShareFolderExists(folderName: String) -> URL? {
-        let documentsDirectory = FileManager().containerURL(forSecurityApplicationGroupIdentifier: qGroupBundleID)
+        let documentsDirectory = containerURL(forSecurityApplicationGroupIdentifier: qGroupBundleID)
         guard let folderURL = documentsDirectory?.appendingPathComponent(folderName) else { return nil}
         
         var isDir : ObjCBool = false
@@ -46,10 +52,10 @@ extension FileManager{
                     try removeItem(at: newURL)
                 }
                 try moveItem(at: srcURL, to: newURL)
-                print("文件接收成功，保存到: \(newURL.path)")
+                shareFileLogger.info("File received successfully, saved to: \(newURL.path, privacy: .public)")
                 
             } catch {
-                print("文件保存失败: \(error.localizedDescription)")
+                shareFileLogger.error("File save failed: \(error.localizedDescription, privacy: .public)")
             }
 
             return newURL.lastPathComponent
@@ -99,6 +105,37 @@ extension FileManager{
         }
         return Array()
     }
+
+    func saveCustomFaceBGImage(image: Data, oldPath: String?) -> URL? {
+        let folderName = "image"
+
+        if let folderURL = makeShareFolderExists(folderName: folderName) {
+            let imageName = "qFaceImage" + String(Int.random(in: 1...100)) + ".png"
+            let imageURL = folderURL.appendingPathComponent(imageName)
+
+            do {
+                try image.write(to: imageURL)
+            } catch {
+                shareFileLogger.error("Face background save failed: \(error.localizedDescription, privacy: .public)")
+                return nil
+            }
+
+            if let oldPath {
+                let oldURL = folderURL.appendingPathComponent(oldPath)
+                if fileExists(atPath: oldURL.path) {
+                    do {
+                        try removeItem(atPath: oldURL.path)
+                    } catch {
+                        shareFileLogger.error("Old face background removal failed: \(error.localizedDescription, privacy: .public)")
+                    }
+                }
+            }
+
+            return imageURL
+        }
+
+        return nil
+    }
     
     func saveCutsomWidgetSmallImage(image: Data, oldPath: String?) -> URL?{
         
@@ -137,9 +174,45 @@ extension FileManager{
             let imageURL = folderURL.appendingPathComponent(imageName)
              
             if( fileExists(atPath: imageURL.path) ){
+                guard isSafeSharedImage(at: imageURL) else {
+                    return nil
+                }
+
                 return imageURL.path
             }
         }
         return nil
+    }
+
+    private func isSafeSharedImage(at url: URL) -> Bool {
+        do {
+            let values = try url.resourceValues(forKeys: [.fileSizeKey])
+            if let fileSize = values.fileSize, fileSize > maxSharedImageBytes {
+                shareFileLogger.error("Shared image is too large: \(fileSize, privacy: .public) bytes")
+                return false
+            }
+        } catch {
+            shareFileLogger.error("Unable to inspect shared image size: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, options),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, options) as? [CFString: Any] else {
+            return true
+        }
+
+        let width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
+        let height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
+        guard width > 0, height > 0 else {
+            return true
+        }
+
+        if width * height > maxSharedImagePixels {
+            shareFileLogger.error("Shared image dimensions are too large: \(width, privacy: .public)x\(height, privacy: .public)")
+            return false
+        }
+
+        return true
     }
 }

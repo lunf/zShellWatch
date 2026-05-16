@@ -11,23 +11,9 @@ import SwiftUI
 @main
 struct WidgetForWatchOS: WidgetBundle {
     var body: some Widget {
-        CircularWidget()
         WeatherWidget()
         HealthWidget()
     }
-}
-
-struct CircularWidget: Widget{
-    let kind: String = "CircularWidget"
-
-    var body: some WidgetConfiguration {
-
-        StaticConfiguration(kind: kind, provider: CircularProvider()) { entry in
-            CircularWidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
-        }.configurationDisplayName(LocalizedStringKey("Circular"))
-    }
-
 }
 
 struct WeatherWidget: Widget {
@@ -56,37 +42,18 @@ struct HealthWidget: Widget {
 
 }
 
-struct CircularProvider: TimelineProvider {
-
-    func placeholder(in context: Context) -> CircularEntry {
-        return CircularEntry(image: leftTopImageName(), string: "Q")
-    }
-
-    func getSnapshot(in context: Context, completion: @escaping (CircularEntry) -> ()) {
-        let entry = CircularEntry(image: leftTopImageName(), string: "Q")
-        completion(entry)
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        let entry = CircularEntry(image: leftTopImageName(), string: "Q")
-        let timeline = Timeline(entries: [entry], policy: .never)
-        completion(timeline)
-    }
-
-}
-
 struct WeatherProvider: TimelineProvider {
 
     var widgetLocationManager = WidgetLocationManager()
 
     func placeholder(in context: Context) -> WeatherEntry {
-        return WeatherEntry(context: context, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "局部小雨", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "局部大雪", symbol: "snow", temperature: "-5℃",humidity: "50%"),alert: ""))
+        return WeatherEntry(context: context, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "Light Rain", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "Heavy Snow", symbol: "snow", temperature: "-5℃",humidity: "50%"),alert: ""))
 
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WeatherEntry) -> ()) {
 
-        let entry = WeatherEntry(context: context, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "局部小雨", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "局部大雪", symbol: "snow", temperature: "-5℃",humidity: "50%"),alert: ""))
+        let entry = WeatherEntry(context: context, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "Light Rain", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "Heavy Snow", symbol: "snow", temperature: "-5℃",humidity: "50%"),alert: ""))
 
         completion(entry)
     }
@@ -96,22 +63,25 @@ struct WeatherProvider: TimelineProvider {
 
         widgetLocationManager.fetchLocation(handler: { location in
             Task{
-
-                if(HFWeatherKey.count == 0){
-                    let weather = try await getWeather(location: location, afterHours: 6)
-                    let entries = makeWeatherEntries(from: weather, context: context, formatter: formatter, maxCount: 5)
-                    let timeline = Timeline(entries: entries, policy: .atEnd)
-
-                    completion(timeline)
-                }else{
-
+                if !HFWeatherKey.isEmpty {
                     getHFWeather(location: location) { weather in
                         let entries = makeWeatherEntries(from: weather, context: context, formatter: formatter, maxCount: 12)
                         let timeline = Timeline(entries: entries, policy: .atEnd)
 
                         completion(timeline)
                     }
+                } else if qUseWeatherKit {
+                    do {
+                        let weather = try await getWeather(location: location, afterHours: 6)
+                        let entries = makeWeatherEntries(from: weather, context: context, formatter: formatter, maxCount: 5)
+                        let timeline = Timeline(entries: entries, policy: .atEnd)
 
+                        completion(timeline)
+                    } catch {
+                        completion(emptyWeatherTimeline(context: context))
+                    }
+                } else {
+                    completion(emptyWeatherTimeline(context: context))
                 }
             }
         })
@@ -132,6 +102,12 @@ struct WeatherProvider: TimelineProvider {
 
             return WeatherEntry(context: context, date: info.current.date, weather: info)
         }
+    }
+
+    private func emptyWeatherTimeline(context: Context) -> Timeline<WeatherEntry> {
+        let refresh = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+        let entry = WeatherEntry(context: context, weather: WeatherViewInfo())
+        return Timeline(entries: [entry], policy: .after(refresh))
     }
 }
 
@@ -167,20 +143,16 @@ struct HealthProvider: TimelineProvider {
        let calendar = Calendar.current
        let components = calendar.component(.hour, from: date)
 
-       // 定义晚上的时间范围，例如从22:00到06:00
+       // Night range, for example 22:00 to 06:00
        return components >= 22 || components < 6
    }
 }
 
 struct CircularWidgetEntryView : View{
-    var entry: CircularProvider.Entry
     @Environment(\.widgetFamily) var family
 
     var body: some View {
         switch family {
-        case .accessoryCircular:
-            SmallCircularView( image: entry.image, text: entry.string)
-
         default:
             VStack{}
         }
@@ -257,17 +229,11 @@ struct HealthEntry: TimelineEntry {
 #Preview(as: .accessoryRectangular) {
     WeatherWidget()
 } timeline: {
-    WeatherEntry(context: nil, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "局部小雨", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "局部大雪", symbol: "snow", temperature: "-11℃",humidity: "50%"),alert: "大风预警"))
+    WeatherEntry(context: nil, weather: WeatherViewInfo(current: QWeather(date: Date(), condition: "Light Rain", symbol: "cloud.rain", temperature: "20℃",humidity: "50%"), after1Hours: QWeather(date: Date()+3600,condition: "Heavy Snow", symbol: "snow", temperature: "-11℃",humidity: "50%"),alert: "High Wind Warning"))
 }
 
 #Preview(as: .accessoryRectangular) {
     HealthWidget()
 } timeline: {
     HealthEntry(context: nil, health: HealthInfo(steps: 9999, excercise: 99, excerciseTime: 99, standHours: 99, heartRate: 60, hrv: HealthHRV(hrv:50)))
-}
-
-#Preview(as: .accessoryCircular) {
-    CircularWidget()
-} timeline: {
-    CircularEntry(image: leftTopImageName(), string: "Q")
 }

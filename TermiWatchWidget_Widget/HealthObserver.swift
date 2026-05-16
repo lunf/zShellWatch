@@ -6,7 +6,10 @@
 //
 
 import HealthKit
-import SwiftUICore
+import SwiftUI
+import OSLog
+
+private let healthLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "Health")
 
 struct HealthHRV{
     var hrv: Int
@@ -35,10 +38,10 @@ struct HealthInfo {
     var standHours: Int
     var heartRate: Int
     var hrv: HealthHRV
-    var bgImage: String? = qHealthImage
+    var bgImage: String? = nil
 
     init(steps: Int, excercise: Int, excerciseTime: Int, standHours: Int, heartRate: Int, hrv: HealthHRV) {
-        let userdefaults = UserDefaults.init(suiteName: qGroupBundleID)
+        let userdefaults = qUserdefaults
 
         self.steps = steps
         self.excercise = excercise
@@ -46,7 +49,7 @@ struct HealthInfo {
         self.standHours = standHours
         self.heartRate = heartRate
         self.hrv = hrv
-        self.bgImage = qHealthImage
+        self.bgImage = nil
 
         if let imageName = userdefaults?.string(forKey: qHealthImageKey) {
             if let path = FileManager.default.getShareImagePath(imageName: imageName) {
@@ -71,7 +74,7 @@ struct HealthInfo {
 
 // MARK: - HealthObserver
 class HealthObserver {
-    let userdefaults = UserDefaults.init(suiteName: qGroupBundleID)
+    let userdefaults = qUserdefaults
 
     /// - Tag: Health Store
     let healthStore: HKHealthStore
@@ -91,13 +94,22 @@ class HealthObserver {
             userdefaults?.set(lastHRV, forKey: "lastHRV")
         }
     }
+    private var didRequestAuthorization = false
 
     init() {
         self.healthStore = HKHealthStore()
-        healthStore.requestAuthorization(toShare: nil, read: hkDataTypesOfInterest) { result,error in
-            print(result.description + " \n " + (error?.localizedDescription ?? ""))
-        }
         lastHRV = userdefaults?.integer(forKey: "lastHRV") ?? 0
+    }
+
+    func requestAuthorizationIfNeeded() {
+        guard qUseHealthKit, !didRequestAuthorization else {
+            return
+        }
+
+        didRequestAuthorization = true
+        healthStore.requestAuthorization(toShare: nil, read: hkDataTypesOfInterest) { result,error in
+            healthLogger.info("Health authorization result: \(result.description, privacy: .public) \(error?.localizedDescription ?? "", privacy: .public)")
+        }
     }
 
     func fetchSample(quantityType: HKQuantityType, unit: HKUnit, completion: @escaping (Int) -> ()){
@@ -116,14 +128,13 @@ class HealthObserver {
         let query = HKSampleQuery(sampleType: quantityType, predicate: predicate, limit: 1, sortDescriptors: sortDescriptors) {
             (query, results, error) in
             if error != nil {
-                print(error.debugDescription)
-                   // 处理错误
+                healthLogger.error("Health sample query failed: \(error.debugDescription, privacy: .public)")
+                   // Handle error
                 completion(-1)
             } else if let results = results {
 //               for sample in results {
                 if let quantitySample = results.first as? HKQuantitySample {
                    let value = quantitySample.quantity.doubleValue(for: unit)
-//                   print("\(quantityType.identifier),\(quantityType.description), \(value) \(unit.unitString)")
                    completion(Int(value))
                } else {
                    completion(-1)
@@ -143,7 +154,7 @@ class HealthObserver {
         let query = HKActivitySummaryQuery(predicate: predicate) { query, results, error in
 
             if error != nil {
-                   // 处理错误
+                   // Handle error
                 completion(HKActivitySummary())
             } else if let results = results {
                 completion(results.first ?? HKActivitySummary())
@@ -162,7 +173,7 @@ class HealthObserver {
             predicate: nil
         ) { _, _, error in
             guard error == nil else {
-                print(error!)
+                healthLogger.error("Activity summary observer failed: \(error!.localizedDescription, privacy: .public)")
 
                 return
             }
@@ -220,7 +231,7 @@ class HealthObserver {
             predicate: nil
           ) { _, _, error in
                 guard error == nil else {
-                  print(error!)
+                  healthLogger.error("Statistics observer failed: \(error!.localizedDescription, privacy: .public)")
 
                   return
                 }
@@ -240,7 +251,14 @@ extension HealthObserver {
 
     func getHealthInfo(completion: @escaping (HealthInfo) -> ()) {
 
-        print("getHealthInfo...")
+        healthLogger.debug("getHealthInfo")
+        guard qUseHealthKit else {
+            completion(HealthInfo())
+            return
+        }
+
+        requestAuthorizationIfNeeded()
+
         var health = HealthInfo(steps: -1, excercise: -1, excerciseTime: -1, standHours: -1, heartRate: -1, hrv: HealthHRV())
         let group = DispatchGroup()
         let stateQueue = DispatchQueue(label: "HealthObserver.healthInfo.state")
@@ -286,19 +304,19 @@ extension HealthObserver {
         }
 
         group.notify(queue: stateQueue) {
-            print(health)
+            healthLogger.debug("Health info updated: \(health.description(), privacy: .public)")
             completion(health)
         }
     }
 
     func getCurrentSteps(completion: @escaping (Int) -> ()) {
         let type: HKQuantityType = HKQuantityType(HKQuantityTypeIdentifier.stepCount)
-        print("getCurrentSteps")
+        healthLogger.debug("getCurrentSteps")
 
         let predicate = HKQuery.predicateForSamples(withStart: Calendar.current.startOfDay(for: Date()), end: Date())
         let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, error in
             if let error = error {
-                print(error)
+                healthLogger.error("Step statistics query failed: \(error.localizedDescription, privacy: .public)")
                 completion(-1)
                 return
             }
@@ -309,7 +327,7 @@ extension HealthObserver {
     }
 
     func getActiveEnergyBurned(completion: @escaping(Int) -> ()){
-        print("getActiveEnergyBurned")
+        healthLogger.debug("getActiveEnergyBurned")
 
         fetchActivitySummary { summary in
 
@@ -321,7 +339,7 @@ extension HealthObserver {
     }
 
     func getExerciseTime(completion: @escaping(Int) -> ()){
-        print("getExerciseTime")
+        healthLogger.debug("getExerciseTime")
 
         fetchActivitySummary { summary in
 
@@ -333,7 +351,7 @@ extension HealthObserver {
     }
 
     func getStandHours(completion: @escaping(Int) -> ()){
-        print("getStandHours")
+        healthLogger.debug("getStandHours")
 
         fetchActivitySummary { summary in
 
@@ -345,13 +363,13 @@ extension HealthObserver {
     }
 
     func getHeartRate(completion: @escaping(Int) -> ()){
-        print("getHeartRate")
+        healthLogger.debug("getHeartRate")
 
         fetchSample(quantityType: HKQuantityType(.heartRate), unit: HKUnit(from: "count/min"), completion: completion)
     }
 
     func getHRV(completion: @escaping(Int) -> ()){
-        print("getHRV")
+        healthLogger.debug("getHRV")
 
         fetchSample(quantityType: HKQuantityType(.heartRateVariabilitySDNN), unit: HKUnit(from: "ms"), completion: completion)
     }

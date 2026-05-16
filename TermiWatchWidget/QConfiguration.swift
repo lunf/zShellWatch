@@ -9,16 +9,35 @@ import Foundation
 import SwiftUI
 
 /*
- 如果配置了和风APIKey，则使用和风API代替WeatherKit
+ Personal development teams cannot sign the WeatherKit entitlement. Keep
+ qUseWeatherKit false unless you have a paid Apple Developer account and have
+ enabled WeatherKit for the app identifier.
+
+ If the QWeather API key is configured, QWeather is used before WeatherKit.
  https://dev.qweather.com
- 中文 https://dev.qweather.com/docs/configuration/project-and-key/
+ Chinese docs https://dev.qweather.com/docs/configuration/project-and-key/
  English https://dev.qweather.com/en/docs/configuration/project-and-key/
  */
+let qUseWeatherKit = false
 let HFWeatherKey = ""
+let qUseHealthKit = true
 
-let qGroupBundleID = "group.com.void.termiWatch"
+var qWeatherSourceName: String {
+    if !HFWeatherKey.isEmpty {
+        return "QWeather"
+    }
+    return qUseWeatherKit ? "WeatherKit" : "Disabled"
+}
 
-let qUserdefaults = UserDefaults.init(suiteName: qGroupBundleID)
+let qGroupBundleID = "group.com.github.lunf.zShellWatch"
+
+let qUserdefaults: UserDefaults? = {
+    guard FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: qGroupBundleID) != nil else {
+        return .standard
+    }
+
+    return UserDefaults(suiteName: qGroupBundleID) ?? .standard
+}()
 
 func terminalName() -> String {
     if let name = qUserdefaults?.string(forKey: qUserNameKey){
@@ -27,32 +46,89 @@ func terminalName() -> String {
     return "void"
 }
 
-func leftTopImageName() -> String{
-    if let imageName = qUserdefaults?.string(forKey: qLeftTopImageKey) {
-        if let path = FileManager.default.getShareImagePath(imageName: imageName) {
-             return path
-        }
+func machineName() -> String {
+    if let name = qUserdefaults?.string(forKey: qMachineNameKey), !name.isEmpty {
+        return name
     }
-    return qDefaultLeftTopImage
+    return "local"
 }
 
-let qDefaultLeftTopImage =  "LeftTopImage"
-let qBGImageNamePre = "Pikachu_"
-let qWeatherImage = "Pikachu_1"
-let qHealthImage = "Pikachu_2"
-let qBGImageCount = 4 // 两组图
-
-let defaultCity = "39.9042, 116.4074" //  (纬度, 经度) (latitude,longitude)
+let defaultCity = "39.9042, 116.4074" //  (latitude, longitude)
 
 let qUserNameKey = "qUserNameKey"
+let qMachineNameKey = "qMachineNameKey"
 let qLeftTopImageKey =  "qLeftTopImageKey"
 let qCustomLeftTopImageKey =  "qCustomLeftTopImageKey"
 
 let qWeatherImageKey = "qWeatherImageKey"
 let qHealthImageKey = "qHealthImageKey"
+let qFaceImageKey = "qFaceImageKey"
 let qCustomImageKey = "qCustomImageKey"
+let qFaceLineOrderKey = "qFaceLineOrderKey"
 
-/// 健康信息刷新间隔 单位：分钟。 按需调节，由于每天刷新有限制，设置过多的频次可能会导致刷新次数用尽后当天不再刷新。
+enum TermiFaceLine: String, CaseIterable, Identifiable {
+    case promptNow
+    case date
+    case time
+    case currentWeather
+    case temperature
+    case humidity
+    case nextWeather
+    case battery
+    case rings
+    case steps
+    case calories
+    case heartRate
+    case prompt
+
+    var id: String { rawValue }
+
+    var titleKey: String {
+        switch self {
+        case .promptNow: return "Command Prompt"
+        case .date: return "Date"
+        case .time: return "Time"
+        case .currentWeather: return "Current Weather"
+        case .temperature: return "Temperature"
+        case .humidity: return "Humidity"
+        case .nextWeather: return "Next Weather"
+        case .battery: return "Battery"
+        case .rings: return "Rings"
+        case .steps: return "Steps"
+        case .calories: return "Calories"
+        case .heartRate: return "Heart Rate"
+        case .prompt: return "Prompt"
+        }
+    }
+}
+
+let qDefaultFaceLines: [TermiFaceLine] = [
+    .promptNow,
+    .currentWeather,
+    .temperature,
+    .humidity,
+    .nextWeather,
+    .rings,
+    .steps,
+    .calories,
+    .heartRate,
+    .prompt
+]
+
+func selectedFaceLines(userDefaults: UserDefaults? = qUserdefaults) -> [TermiFaceLine] {
+    guard let lineIDs = userDefaults?.stringArray(forKey: qFaceLineOrderKey) else {
+        return qDefaultFaceLines
+    }
+
+    let lines = lineIDs.compactMap(TermiFaceLine.init(rawValue:))
+    return lines.isEmpty ? qDefaultFaceLines : lines
+}
+
+func saveSelectedFaceLines(_ lines: [TermiFaceLine], userDefaults: UserDefaults? = qUserdefaults) {
+    userDefaults?.set(lines.map(\.rawValue), forKey: qFaceLineOrderKey)
+    userDefaults?.synchronize()
+}
+
 /// Health info refresh interval, unit: minutes. On demand adjustment, due to the daily refresh limit, setting too many refresh frequencies may result in not refreshing again on the same day after the refresh times are exhausted.
 let healthRefreshInterval = 15
 
@@ -70,4 +146,8 @@ let colorStep = Color.indigo
 let colorKcal = Color(r:238,g:98,b:48)
 let colorHR = Color(r:235,g:74,b:98)
 let qRowHeight = 14.0
+let qFaceRowSpacing = 3.0
+let qFacePaddingTop = 20.0
+let qFacePaddingHorizontal = 12.0
+let qFacePaddingBottom = 12.0
 let qFontSize = 13.0

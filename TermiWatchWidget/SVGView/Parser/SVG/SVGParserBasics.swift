@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import OSLog
+
+private let svgParserBasicsLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "SVG")
 
 extension SVGHelper {
 
@@ -41,7 +44,7 @@ extension SVGHelper {
         case nil, "px":
             return value
         default:
-            print("SVG parsing error. Unit \"\(unit ?? "")\" is not supported")
+            svgParserBasicsLogger.error("SVG parsing error. Unit \"\(unit ?? "", privacy: .public)\" is not supported")
             return value
         }
     }

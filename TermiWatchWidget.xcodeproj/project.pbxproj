@@ -733,16 +733,40 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					6E7DD5E22AD5542F003E0C77 = {
 						CreatedOnToolsVersion = 15.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
 					};
 					6E7DD6002AD5546A003E0C77 = {
 						CreatedOnToolsVersion = 15.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
 					};
 					6E7DD6362AD5554C003E0C77 = {
 						CreatedOnToolsVersion = 15.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -1090,6 +1114,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = T4APXL6Q9S;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1113,6 +1138,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -1154,6 +1180,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = T4APXL6Q9S;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1170,6 +1197,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1183,13 +1211,12 @@
 				CODE_SIGN_ENTITLEMENTS = TermiWatchWidget/TermiWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Your health records will be used to display activity data.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health records will be used to display activity data.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_CFBundleDisplayName = zShellWatch;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data will be used to display activity, steps, heart rate, and HRV.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -1201,7 +1228,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.lunf.zShellWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1220,13 +1247,12 @@
 				CODE_SIGN_ENTITLEMENTS = TermiWatchWidget/TermiWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Your health records will be used to display activity data.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health records will be used to display activity data.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_CFBundleDisplayName = zShellWatch;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data will be used to display activity, steps, heart rate, and HRV.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -1238,7 +1264,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.lunf.zShellWatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1252,7 +1278,6 @@
 		6E7DD6102AD5546C003E0C77 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "TermiWatchWidget Watch App/TermiWatchWidget Watch App.entitlements";
@@ -1260,24 +1285,22 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"TermiWatchWidget Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TermiWatchWidget-Watch-App-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_CFBundleDisplayName = zShellWatch;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data will be used to display activity, steps, heart rate, and HRV.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.void.termiWatch;
-				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.github.lunf.zShellWatch;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.lunf.zShellWatch.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1291,31 +1314,28 @@
 		6E7DD6112AD5546C003E0C77 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "TermiWatchWidget Watch App/TermiWatchWidget Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"TermiWatchWidget Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TermiWatchWidget-Watch-App-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "⌚️TermiWidget";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_CFBundleDisplayName = zShellWatch;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data will be used to display activity, steps, heart rate, and HRV.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.void.termiWatch;
-				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.github.lunf.zShellWatch;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.lunf.zShellWatch.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1334,13 +1354,11 @@
 				CODE_SIGN_ENTITLEMENTS = TermiWatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget_Widget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TermiWatchWidgetExtension;
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_CFBundleDisplayName = zShellWatchExtension;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data will be used to display activity, steps, heart rate, and HRV.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1350,7 +1368,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch.watchkitapp.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.lunf.zShellWatch.watchkitapp.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1370,13 +1388,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TermiWatchWidget_Widget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TermiWatchWidgetExtension;
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read active energy, resting energy, and dietary energy";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Your health records will be used to display activity data.";
+				INFOPLIST_KEY_CFBundleDisplayName = zShellWatchExtension;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data will be used to display activity, steps, heart rate, and HRV.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location data will be used to display weather data. ";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1386,7 +1402,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.termiWatch.watchkitapp.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.github.lunf.zShellWatch.watchkitapp.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;

@@ -6,98 +6,95 @@
 //
 
 import SwiftUI
-import PhotosUI
-import ClockKit
+import WidgetKit
+import CoreLocation
+import WatchConnectivity
+import OSLog
+
+private let termiWatchLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "App")
+private let watchPreviewWidth: CGFloat = 200
+private let watchPreviewHeight: CGFloat = 220
+private let watchPreviewCornerRadius: CGFloat = 36
+private let watchPreviewControlGap: CGFloat = 16
+private let watchPreviewStatusPadding: CGFloat = 14
+private let watchPreviewStatusContentInset: CGFloat = 24
 
 @main
 struct TermiWatch: App {
     @Environment(\.scenePhase) private var scenePhase
     @State var viewModel = QTermiViewModel()
-    @State var imageIndex = 1
-    let userdefaults = UserDefaults.init(suiteName: qGroupBundleID)
+    let userdefaults = qUserdefaults
     let session = WatchSessionManager.shared
-    @State private var selectedBGItem: [PhotosPickerItem] = []
-    @State private var selectedSmallItem: [PhotosPickerItem] = []
     @State private var errorMessage = ""
     @State private var isShowingError = false
+    @State private var syncStatusMessage = ""
+    @State private var isShowingSyncStatus = false
+    @State private var locationStatus = "Checking"
+    @State private var healthStatus = "Checking"
+    @State private var watchStatus = "Checking"
+    @State private var isShowingStatusPanel = false
+    @State private var isShowingFaceLineEditor = false
+    @State private var faceLines = selectedFaceLines()
+    @State private var didRunInitialRefresh = false
     @State var userName = terminalName()
-
-#if targetEnvironment(simulator)
-#else
-    let locationMgr = WidgetLocationManager()
-#endif
+    @State var hostName = machineName()
 
     var body: some Scene {
         WindowGroup {
-            VStack{
-                Spacer()
-                ContentView(viewModel: viewModel)
-                .onTapGesture {
-                    imageIndex+=2
-                    if(imageIndex>qBGImageCount){
-                        imageIndex = 1;
+            NavigationStack {
+                GeometryReader { proxy in
+                    let previewWidth = min(watchPreviewWidth, max(0, proxy.size.width - 32))
+
+                    ScrollView {
+                        VStack(spacing: watchPreviewControlGap) {
+                            Color.clear.frame(height: watchPreviewControlGap)
+
+                            WatchFacePreview(viewModel: viewModel, faceLines: faceLines)
+                                .frame(width: previewWidth, height: watchPreviewHeight, alignment: .top)
+                                .clipShape(RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous)
+                                        .stroke(.green, lineWidth: 1)
+                                }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .top)
                     }
-
-                    let weatherImage = qBGImageNamePre + String(imageIndex);
-                    let healthImage = qBGImageNamePre + String(imageIndex+1);
-                    userdefaults?.setValue(weatherImage, forKey: qWeatherImageKey)
-                    userdefaults?.setValue(healthImage, forKey: qHealthImageKey)
-                    userdefaults?.synchronize()
-
-                    viewModel.updateModel()
+                    .background(.black)
+                    .scrollContentBackground(.hidden)
                 }
-                Spacer()
-
-                VStack{
-                    HStack{
-                        Text(LocalizedStringKey("Custom User")).frame(width: 100)
-                        TextField("UserName", text: $userName).foregroundStyle(.black).background(.white)
-                            .frame(width: 200,height: 50).font(.system(size: 18)).submitLabel(.done).onSubmit {
-                                userdefaults?.set(userName, forKey: qUserNameKey)
-                                userdefaults?.synchronize()
-                                viewModel.updateModel()
-                                endEditing()
-                            }
-                    }.frame(width: 300,height: 50)
-
-                    HStack{
-                        PhotosPicker(LocalizedStringKey("Custom Left Top"), selection: $selectedSmallItem , maxSelectionCount: 1, matching: .images).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
-                            .onChange(of: selectedSmallItem) {
-                                Task{
-                                    if let data = try await selectedSmallItem.first?.loadTransferable(type: Data.self) {
-                                        print("Image data loaded: \(data.count) bytes")
-
-                                        if let uiImage = UIImage(data: data){
-                                            handleSmallImage(image: uiImage)
-                                        }
-                                        selectedSmallItem = []
-                                    }
-                                }
-                            }
+                .background(.black)
+                .toolbarBackground(.gray, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            updateStatus()
+                            isShowingStatusPanel = true
+                        } label: {
+                            Image(systemName: "link.circle")
+                        }
+                        .accessibilityLabel(LocalizedStringKey("Connection Status"))
+                        .popover(isPresented: $isShowingStatusPanel) {
+                            statusPanel
+                                .padding(16)
+                                .presentationCompactAdaptation(.popover)
+                        }
                     }
-
-                    HStack{
-                        PhotosPicker(LocalizedStringKey("Custom BG"), selection: $selectedBGItem , maxSelectionCount: 1, matching: .images).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
-                            .onChange(of: selectedBGItem) {
-                                Task{
-                                    if let data = try await selectedBGItem.first?.loadTransferable(type: Data.self) {
-                                        print("Image data loaded: \(data.count) bytes")
-
-                                        if let uiImage = UIImage(data: data){
-                                            handleBGImage(image: uiImage)
-                                        }
-                                        selectedBGItem = []
-                                    }
-                                }
-                            }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            isShowingFaceLineEditor = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .accessibilityLabel(LocalizedStringKey("Configure Lines"))
                     }
-
-                    HStack(alignment: .bottom, content: {
-
-                        Button(LocalizedStringKey("Sync Watch Face"), action: addWatchFace).frame(width: 300,height: 50).background(.orange).foregroundStyle(.black).border(.black, width: 1).cornerRadius(5)
-
-                    })
-                    Spacer()
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(action: syncWatchFace) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel(LocalizedStringKey("Sync Watch Face"))
+                    }
                 }
             }
             .alert(LocalizedStringKey("Error"), isPresented: $isShowingError) {
@@ -105,23 +102,38 @@ struct TermiWatch: App {
             } message: {
                 Text(errorMessage)
             }
+            .alert(LocalizedStringKey("Sync Watch Face"), isPresented: $isShowingSyncStatus) {
+                Button(LocalizedStringKey("OK"), role: .cancel) {}
+            } message: {
+                Text(syncStatusMessage)
+            }
+            .sheet(isPresented: $isShowingFaceLineEditor) {
+                FaceLineEditorView(
+                    terminalUser: $userName,
+                    machineName: $hostName,
+                    selectedLines: $faceLines,
+                    onPromptIdentityChange: savePromptIdentity,
+                    onLinesChange: saveFaceLineSelection
+                )
+                .onDisappear(perform: refreshWidgets)
+            }
 
         }
-        //  如果这里报错，要兼容iOS17以下，true 修改为 false
+        //  If this reports an error, set true to false to support iOS 17 and earlier.
         //  If an error is reported here, it should be compatible with iOS17 or below, and true should be changed to false
 #if true
         .onChange(of: scenePhase, initial: true) {
             switch scenePhase {
             case .active:
-                print("📲 active")
-                viewModel.updateModel()
+                termiWatchLogger.debug("Active")
+                refreshAfterFirstFrame()
 
 //                motionViewModel.startMotionUpdates()
 
             case .inactive:
-                print("📲 inactive")
+                termiWatchLogger.debug("Inactive")
             case .background:
-                print("📲 background")
+                termiWatchLogger.debug("Background")
             @unknown default: break
             }
         }
@@ -130,151 +142,126 @@ struct TermiWatch: App {
 
             if(phase == .active){
                 viewModel.updateModel()
+                updateStatus()
             }
         }
 #endif
 
     }
 
-    let library = CLKWatchFaceLibrary()
+    var statusPanel: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            statusRow(title: LocalizedStringKey("Location"), value: locationStatus)
+            statusRow(title: LocalizedStringKey("Health"), value: healthStatus)
+            statusRow(title: LocalizedStringKey("Watch"), value: watchStatus)
+            statusRow(title: LocalizedStringKey("Weather Source"), value: qWeatherSourceName)
+        }
+        .frame(width: 300, alignment: .leading)
+        .font(.system(size: 12))
+    }
 
-    func addWatchFace(){
+    func statusRow(title: LocalizedStringKey, value: String) -> some View {
+        HStack {
+            Text(title).foregroundStyle(.secondary)
+            Spacer()
+            Text(value).foregroundStyle(.primary).multilineTextAlignment(.trailing)
+        }
+    }
 
-        guard let url = Bundle.main.url(forResource: "TermiWatchWidget", withExtension: "watchface") else {
-            showError("*** Unable to find TermiWatchWidget.watchface in the app bundle ***")
+    func syncWatchFace() {
+        refreshWidgets()
+        syncStatusMessage = syncStatusText()
+        isShowingSyncStatus = true
+    }
+
+    func refreshWidgets() {
+        userdefaults?.set(userName, forKey: qUserNameKey)
+        userdefaults?.set(hostName, forKey: qMachineNameKey)
+        userdefaults?.synchronize()
+        session.syncSettingsToWatch()
+
+        viewModel.updateModel()
+        WidgetCenter.shared.reloadTimelines(ofKind: "HealthWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "WeatherWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "CircularWidget")
+        updateStatus()
+    }
+
+    func refreshAfterFirstFrame() {
+        guard didRunInitialRefresh else {
+            didRunInitialRefresh = true
+            Task { @MainActor in
+                await Task.yield()
+                viewModel.updateModel()
+                updateStatus()
+            }
             return
         }
-        library.addWatchFace(at: url) { error in
-            if let error = error {
-                showError("*** An error occurred: \(error.localizedDescription) ***")
-            }
+
+        viewModel.updateModel()
+        updateStatus()
+    }
+
+    func saveFaceLineSelection(_ lines: [TermiFaceLine]) {
+        faceLines = lines
+        saveSelectedFaceLines(lines, userDefaults: userdefaults)
+        refreshWidgets()
+    }
+
+    func savePromptIdentity() {
+        userdefaults?.set(userName, forKey: qUserNameKey)
+        userdefaults?.set(hostName, forKey: qMachineNameKey)
+        userdefaults?.synchronize()
+        refreshWidgets()
+    }
+
+    func updateStatus() {
+        let locationAuthorization = CLLocationManager().authorizationStatus
+        locationStatus = locationAuthorization.statusText
+
+        healthStatus = qUseHealthKit ? "Available" : "Disabled"
+
+        guard WCSession.isSupported() else {
+            watchStatus = "Unsupported"
+            return
+        }
+
+        switch WCSession.default.activationState {
+        case .activated:
+            watchStatus = WCSession.default.isReachable ? "Reachable" : "Paired"
+        case .inactive:
+            watchStatus = "Inactive"
+        case .notActivated:
+            watchStatus = "Not Activated"
+        @unknown default:
+            watchStatus = "Unknown"
         }
     }
 
-    func handleBGImage(image:UIImage){
-        // max 463.2, 196.7 ,  463*400 (App)
-        // max area 72112, 68904/  (Widget )
-        // 460 * 156, 460 * 149
-
-        let w = 460.0, h = 306.0, h1 = 149.0, h2 = 149.0
-        var newFrame = CGRect(x: 0, y: 0, width:w, height: h)
-
-        let imgW = image.size.width
-        let imgH = image.size.height
-
-        var dstH = h
-        var dstW = dstH / imgH * imgW
-
-        let startX = w - dstW;
-
-        if(startX >= 0){
-            newFrame.origin.x = startX
-        }else{
-            dstW = w
-            dstH = dstW / imgW * imgH
-            let startY = h - dstH
-
-            newFrame.origin.y = startY / 2.0
+    func syncStatusText() -> String {
+        guard WCSession.isSupported() else {
+            return "Watch connectivity is not supported on this device."
         }
 
-        let dstSize = CGSize(width: dstW, height: dstH)
-        var dstImage = image.scaleTo(dstSize)
+        let watchSession = WCSession.default
 
-        let drawFrame = CGRect(origin: newFrame.origin, size: dstSize)
-        dstImage = dstImage?.drawTo(newSize: newFrame.size, drawFrame: drawFrame)
-
-        let frame1 = CGRect(x:0, y:0, width: w, height: h1)
-        let image1 = dstImage?.cropWithCropRect(frame1)
-
-        let frame2 = CGRect(x:0, y:h1+8, width: w, height: h2)
-        let image2 = dstImage?.cropWithCropRect(frame2)
-
-        if(image1 != nil && image2 != nil){
-            let imagedata1 = image1!.pngData()!
-            let imagedata2 = image2!.pngData()!
-
-            let oldPath = userdefaults?.string(forKey: qCustomImageKey)
-
-            // AppGroup共享文件无效，Watch和iPhone是互相隔离的，无法取得资源文件, 使用WCSession传输
-            let urls = FileManager.default.saveCutsomWidgetBGImage(image1: imagedata1, image2: imagedata2, oldPath: oldPath)
-            guard urls.count >= 2 else {
-                showError("Unable to save custom background image.")
-                return
-            }
-
-            session.sendImage(images: [qWeatherImageKey: urls[0]])
-            session.sendImage(images: [qHealthImageKey: urls[1]])
-
-            userdefaults?.setValue(urls[0].lastPathComponent, forKey: qWeatherImageKey);
-            userdefaults?.setValue(urls[1].lastPathComponent, forKey: qHealthImageKey);
-
-            let customPath = urls[0].lastPathComponent.components(separatedBy: "_").first
-            userdefaults?.setValue(customPath, forKey: qCustomImageKey)
-
-            userdefaults?.synchronize()
-
-            viewModel.updateModel()
-        }
-    }
-
-    func handleSmallImage(image:UIImage){
-        // max 463.2, 196.7 ,  463*400 (App)
-        // max area 72112, 68904/  (Widget )
-        // 460 * 156, 460 * 149
-
-        let w = 100.0, h = 100.0;
-        var newFrame = CGRect(x: 0, y: 0, width:w, height: h)
-
-        let imgW = image.size.width
-        let imgH = image.size.height
-
-        var dstH = h
-        var dstW = dstH / imgH * imgW
-
-        let startX = w - dstW;
-
-        if(startX >= 0){
-            newFrame.origin.x = startX
-        }else{
-            dstW = w
-            dstH = dstW / imgW * imgH
-            let startY = h - dstH
-
-            newFrame.origin.y = startY / 2.0
+        guard watchSession.activationState == .activated else {
+            return "Watch connection is not active yet. Open the watch app once, then try again."
         }
 
-        let dstSize = CGSize(width: dstW, height: dstH)
-        var dstImage = image.scaleTo(dstSize)
-
-        let drawFrame = CGRect(origin: newFrame.origin, size: dstSize)
-        dstImage = dstImage?.drawTo(newSize: newFrame.size, drawFrame: drawFrame)
-
-
-        if(dstImage != nil){
-            guard let imageData = dstImage!.pngData() else {
-                showError("Unable to process custom image.")
-                return
-            }
-
-            let oldPath = userdefaults?.string(forKey: qCustomLeftTopImageKey)
-
-            // AppGroup共享文件无效，Watch和iPhone是互相隔离的，无法取得资源文件, 使用WCSession传输
-            if let url = FileManager.default.saveCutsomWidgetSmallImage(image: imageData, oldPath: oldPath){
-
-                session.sendImage(images: [qLeftTopImageKey: url])
-
-                userdefaults?.setValue(url.lastPathComponent, forKey: qLeftTopImageKey);
-                userdefaults?.setValue(url.lastPathComponent, forKey: qCustomLeftTopImageKey);
-
-                userdefaults?.synchronize()
-
-                viewModel.updateModel()
-
-                if(url.lastPathComponent.contains("_") == true){
-                    print(" contain ____");
-                }
-            }
+        guard watchSession.isPaired else {
+            return "No paired Apple Watch was found."
         }
+
+        guard watchSession.isWatchAppInstalled else {
+            return "The Watch app is not installed. Install it on Apple Watch, then sync again."
+        }
+
+        if watchSession.isReachable {
+            return "Sent to Apple Watch. Keep the watch app open to see the update immediately."
+        }
+
+        return "Saved for Apple Watch. Open zShellWatch on the watch to apply the update."
     }
 
     func showError(_ message: String) {
@@ -284,11 +271,159 @@ struct TermiWatch: App {
         }
     }
 
+}
 
-    func endEditing() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+struct WatchFacePreview: View {
+    let viewModel: QTermiViewModel
+    let faceLines: [TermiFaceLine]
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            ContentView(viewModel: viewModel, faceLines: faceLines)
+                .foregroundStyle(.white)
+                .padding(.top, watchPreviewStatusContentInset)
+
+            TimelineView(.periodic(from: Date(), by: 60)) { timeline in
+                Text(Self.statusTimeFormatter.string(from: timeline.date))
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .monospacedDigit()
+                    .padding(.top, watchPreviewStatusPadding)
+                    .padding(.trailing, watchPreviewStatusPadding)
+                    .allowsHitTesting(false)
+            }
+        }
+        .background(.black)
     }
 
+    private static let statusTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
+}
+
+struct FaceLineEditorView: View {
+    @Binding var terminalUser: String
+    @Binding var machineName: String
+    @Binding var selectedLines: [TermiFaceLine]
+    let onPromptIdentityChange: () -> Void
+    let onLinesChange: ([TermiFaceLine]) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var editMode: EditMode = .inactive
+
+    private var availableLines: [TermiFaceLine] {
+        TermiFaceLine.allCases.filter { !selectedLines.contains($0) }
+    }
+
+    private var isEditing: Bool {
+        editMode.isEditing
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section(LocalizedStringKey("Terminal User")) {
+                    TextField(LocalizedStringKey("Terminal User"), text: $terminalUser)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.done)
+                        .onSubmit(onPromptIdentityChange)
+                }
+
+                Section(LocalizedStringKey("Machine Name")) {
+                    TextField(LocalizedStringKey("Machine Name"), text: $machineName)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.done)
+                        .onSubmit(onPromptIdentityChange)
+                }
+
+                Section(LocalizedStringKey("Displayed Lines")) {
+                    ForEach(selectedLines) { line in
+                        Text(LocalizedStringKey(line.titleKey))
+                    }
+                    .onMove(perform: moveLines)
+                    .onDelete(perform: removeLines)
+                }
+
+                Section(LocalizedStringKey("Available Lines")) {
+                    ForEach(availableLines) { line in
+                        Button {
+                            addLine(line)
+                        } label: {
+                            HStack {
+                                Text(LocalizedStringKey(line.titleKey))
+                                Spacer()
+                                Image(systemName: "plus.circle")
+                            }
+                        }
+                        .disabled(isEditing)
+                        .opacity(isEditing ? 0.45 : 1)
+                    }
+                }
+            }
+            .navigationTitle(LocalizedStringKey("Face Lines"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    if !isEditing {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "checkmark")
+                        }
+                        .accessibilityLabel(LocalizedStringKey("Done"))
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        withAnimation {
+                            editMode = isEditing ? .inactive : .active
+                        }
+                    } label: {
+                        Image(systemName: isEditing ? "checkmark.circle" : "arrow.up.arrow.down")
+                    }
+                    .accessibilityLabel(isEditing ? LocalizedStringKey("Done") : LocalizedStringKey("Edit"))
+                }
+            }
+            .environment(\.editMode, $editMode)
+        }
+    }
+
+    private func addLine(_ line: TermiFaceLine) {
+        selectedLines.append(line)
+        onLinesChange(selectedLines)
+    }
+
+    private func moveLines(from source: IndexSet, to destination: Int) {
+        selectedLines.move(fromOffsets: source, toOffset: destination)
+        onLinesChange(selectedLines)
+    }
+
+    private func removeLines(at offsets: IndexSet) {
+        selectedLines.remove(atOffsets: offsets)
+        onLinesChange(selectedLines)
+    }
+}
+
+extension CLAuthorizationStatus {
+    var statusText: String {
+        switch self {
+        case .notDetermined:
+            return "Not Determined"
+        case .restricted:
+            return "Restricted"
+        case .denied:
+            return "Denied"
+        case .authorizedAlways:
+            return "Authorized"
+        case .authorizedWhenInUse:
+            return "Authorized"
+        @unknown default:
+            return "Unknown"
+        }
+    }
 }
 
 extension UIImage{

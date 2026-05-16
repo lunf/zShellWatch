@@ -9,12 +9,14 @@ import Foundation
 import WeatherKit
 import CoreLocation
 import SwiftUI
+import OSLog
 
 
+private let weatherLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "Weather")
 
 struct WeatherInfo {
     let current: QWeather
-    let weathers: [QWeather] // 0为当前
+    let weathers: [QWeather] // Index 0 is current weather
     let alerts: [String]
 
     init(current: QWeather, weathers: [QWeather], alerts: [String]) {
@@ -139,7 +141,7 @@ func getWeather(location: CLLocation, afterHours: Int) async throws -> WeatherIn
 
     }catch {
 
-        print("WatchWeatherCall error: \(error.localizedDescription)")
+        weatherLogger.error("WatchWeatherCall error: \(error.localizedDescription, privacy: .public)")
     }
 
     return result
@@ -257,7 +259,7 @@ func getHFWeather(location: CLLocation, handler: (@escaping (WeatherInfo) -> Voi
     URLSession(configuration: sessionConfig).dataTask(with: request) { data, response, error in
         do {
             if(data == nil){
-                print(error ?? " error")
+                weatherLogger.error("QWeather current request failed: \(error?.localizedDescription ?? "Unknown error", privacy: .public)")
                 handler(WeatherInfo())
                 return
             }
@@ -267,7 +269,7 @@ func getHFWeather(location: CLLocation, handler: (@escaping (WeatherInfo) -> Voi
                 URLSession(configuration: sessionConfig).dataTask(with: request2) { data, response, error in
                     do {
                         guard let data = data else {
-                            print(error ?? " error")
+                            weatherLogger.error("QWeather hourly request failed: \(error?.localizedDescription ?? "Unknown error", privacy: .public)")
                             handler(WeatherInfo())
                             return
                         }
@@ -276,28 +278,28 @@ func getHFWeather(location: CLLocation, handler: (@escaping (WeatherInfo) -> Voi
                         if(result2.code == "200"){
                             let hf = WeatherInfo(current: result.now, weathers: result2.hourly)
                             handler(hf)
-                            print(hf)
+                            weatherLogger.debug("QWeather response parsed successfully.")
                         }else{
-                            print("HF error \(result2.code)")
+                            weatherLogger.error("QWeather hourly API error: \(result2.code, privacy: .public)")
 
                             handler(WeatherInfo())
                         }
 
                     } catch {
-                        print("无法连接到服务器 \(error)")
+                        weatherLogger.error("Unable to connect to server: \(error.localizedDescription, privacy: .public)")
                         handler(WeatherInfo())
                     }
                 }.resume()
 
 
             }else{
-                print("HF error \(result.code)")
+                weatherLogger.error("QWeather current API error: \(result.code, privacy: .public)")
 
                 handler(WeatherInfo())
             }
 
         } catch {
-            print("无法连接到服务器 \(error)")
+            weatherLogger.error("Unable to connect to server: \(error.localizedDescription, privacy: .public)")
             handler(WeatherInfo())
         }
     }.resume()
@@ -305,22 +307,29 @@ func getHFWeather(location: CLLocation, handler: (@escaping (WeatherInfo) -> Voi
 }
 
 class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
-    @AppStorage("LastLocation", store: UserDefaults.init(suiteName: qGroupBundleID))
-    var lastLocation: String = defaultCity{ // Beijing
-        didSet{
-            print("lastLocation didset")
+    var lastLocation: String {
+        get {
+            qUserdefaults?.string(forKey: "LastLocation") ?? defaultCity
+        }
+        set {
+            qUserdefaults?.set(newValue, forKey: "LastLocation")
+            weatherLogger.debug("lastLocation didSet")
         }
     }
-    @AppStorage("LastLocationTime", store: UserDefaults.init(suiteName: qGroupBundleID))
-    var lastLocationTime: String = ""{
-        didSet{
-            print("LastLocationTime didset")
+
+    var lastLocationTime: String {
+        get {
+            qUserdefaults?.string(forKey: "LastLocationTime") ?? ""
+        }
+        set {
+            qUserdefaults?.set(newValue, forKey: "LastLocationTime")
+            weatherLogger.debug("LastLocationTime didSet")
         }
     }
 
 
     var locationManager: CLLocationManager?
-    private var handler: ((CLLocation) -> Void)?
+    private var handlers: [(CLLocation) -> Void] = []
 
 //    var lastLati = UserDefaults.standard.object(forKey: "LastLocation.lati") ?? 0
 //    var lastLong = UserDefaults.standard.object(forKey: "LastLocation.long") ?? 0
@@ -333,7 +342,7 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
             self.locationManager!.delegate = self
 
             let status = self.locationManager!.authorizationStatus
-            print("location status \(status)")
+            weatherLogger.debug("Location status: \(String(describing: status), privacy: .public)")
             if status == .notDetermined {
                 self.locationManager!.requestWhenInUseAuthorization()
             }
@@ -341,31 +350,39 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
     }
 
     func fetchLocation(handler: @escaping (CLLocation) -> Void) {
-        self.handler = handler
-
-        print("CL \(lastLocation) Time \(lastLocationTime)")
+        weatherLogger.debug("Cached location: \(self.lastLocation, privacy: .public), time: \(self.lastLocationTime, privacy: .public)")
 
         let now:Double = Date().timeIntervalSince1970
         let last:Double = Double(lastLocationTime) ?? 0
 
         if( (now - last) < 3600*12){
-            print("use cache Location")
+            weatherLogger.debug("Using cached location")
             let location = CLLocation(string: lastLocation)
             handler(location)
             return
         }
 
-        self.locationManager?.requestLocation()
-        print("requestLocation")
+        guard let locationManager else {
+            weatherLogger.error("Location manager is not ready; using cached location.")
+            handler(CLLocation(string: lastLocation))
+            return
+        }
+
+        handlers.append(handler)
+        locationManager.requestLocation()
+        weatherLogger.debug("Requested location")
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let location = locations.last!
+        guard let location = locations.last else {
+            completeLocationRequests(with: CLLocation(string: lastLocation))
+            return
+        }
 //        lastLati = location.coordinate.latitude
 //        lastLong = location.coordinate.longitude
 //
 //        updateTime = Date()
-        print("didUpdateLocations \(locations)")
+        weatherLogger.debug("Did update locations: \(String(describing: locations), privacy: .public)")
 //
 //        UserDefaults.standard.set(lastLati, forKey: "LastLocation.lati")
 //        UserDefaults.standard.set(lastLong, forKey: "LastLocation.long")
@@ -376,14 +393,23 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
         lastLocation = location.string()
         lastLocationTime = Date().since1970TimeIntervalString();
 
-        self.handler!(location)
+        completeLocationRequests(with: location)
     }
 
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("didUpdateLocations \(error)")
+        weatherLogger.error("Location update failed: \(error.localizedDescription, privacy: .public)")
         let location = CLLocation(string: lastLocation)
-        self.handler!(location)
+        completeLocationRequests(with: location)
+    }
+
+    private func completeLocationRequests(with location: CLLocation) {
+        let pendingHandlers = handlers
+        handlers.removeAll()
+
+        pendingHandlers.forEach { handler in
+            handler(location)
+        }
     }
 }
 

@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import OSLog
+
+private let svgIndexLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "SVG")
 
 class SVGIndex {
 
@@ -151,7 +154,7 @@ class SVGIndex {
             if xScale == yScale {
                 r *= xScale
             } else {
-                print("SVG parsing error. No oval radial gradients supported")
+                svgIndexLogger.error("SVG parsing error. No oval radial gradients supported")
             }
 
             let point2 = CGPoint(x: fx, y: fy).applying(transform)

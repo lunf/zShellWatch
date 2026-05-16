@@ -29,8 +29,8 @@ func getJieQi(date: Date) -> String? {
         index = (iMonth-1) * 2 + (iDay > 15 ? 1: 0);
     }
     
-    if index >= 0 && index < chineseDays.count {
-        return chineseDays[index]
+    if index >= 0 && index < jieQiKeys.count {
+        return NSLocalizedString(jieQiKeys[index], comment: "Chinese solar term")
     }
     return nil
 }
@@ -48,11 +48,11 @@ let  gLunarHolDay = [
     0x95,0xB4, 0xA5,0xB4, 0xA5,0xA6, 0x97,0x87, 0x87,0x78, 0x87,0x96,  //2028
     ]
 
-let chineseDays = [
-    "小寒","大寒","立春","雨水","惊蛰","春分",
-    "清明","谷雨","立夏","小满","芒种","夏至",
-    "小暑","大暑","立秋","处暑","白露","秋分",
-    "寒露","霜降","立冬","小雪","大雪","冬至"   ]
+let jieQiKeys = [
+    "JieQi.MinorCold","JieQi.MajorCold","JieQi.StartOfSpring","JieQi.RainWater","JieQi.AwakeningOfInsects","JieQi.SpringEquinox",
+    "JieQi.PureBrightness","JieQi.GrainRain","JieQi.StartOfSummer","JieQi.GrainFull","JieQi.GrainInEar","JieQi.SummerSolstice",
+    "JieQi.MinorHeat","JieQi.MajorHeat","JieQi.StartOfAutumn","JieQi.EndOfHeat","JieQi.WhiteDew","JieQi.AutumnEquinox",
+    "JieQi.ColdDew","JieQi.FrostDescent","JieQi.StartOfWinter","JieQi.MinorSnow","JieQi.MajorSnow","JieQi.WinterSolstice"   ]
 
 
 //0xA5,0xC3, 0xA5,0xB5, 0xA6,0xA6, 0x87,0x88, 0x88,0x78, 0x87,0x86,  //2029
@@ -98,4 +98,3 @@ let chineseDays = [
 //0xA4,0xC3, 0xA5,0xA5, 0xA5,0xA6, 0x97,0x87, 0x87,0x78, 0x87,0x86,  //2049
 //
 //0xA5,0xC3, 0xA5,0xB5, 0xA6,0xA6, 0x87,0x88, 0x78,0x78, 0x87,0x87    //2050
-

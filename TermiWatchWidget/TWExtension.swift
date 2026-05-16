@@ -9,6 +9,8 @@ import Foundation
 import SwiftUI
 
 let hfBundle = Bundle(path: Bundle.main.path(forResource: "HFBundle", ofType: "bundle")!)
+private let chineseYearSeparator = "\u{5E74}"
+private let chineseWeekdayPrefix = "\u{661F}\u{671F}"
     
 
 struct WXImage: View{
@@ -147,8 +149,8 @@ extension Date{
             formatter.calendar = Calendar(identifier: .chinese)
             formatter.locale = Locale(identifier: "zh_CN")
             var date = formatter.string(from: self)
-            date = date.components(separatedBy: CharacterSet(charactersIn: "年")).last ?? date
-            date = date.replacingOccurrences(of: "星期", with: " 周")
+            date = date.components(separatedBy: CharacterSet(charactersIn: chineseYearSeparator)).last ?? date
+            date = date.replacingOccurrences(of: chineseWeekdayPrefix, with: " Week ")
             let jieqi = " " + (getJieQi(date: self) ?? "")
             date = date.appending(jieqi)
             return date
@@ -163,8 +165,8 @@ extension Date{
 extension DateFormatter{
     func noYear(from: Date) -> String{
         var date = self.string(from: from)
-        date = date.components(separatedBy: CharacterSet(charactersIn: "年")).last ?? date
-        date = date.replacingOccurrences(of: "星期", with: " 周")
+        date = date.components(separatedBy: CharacterSet(charactersIn: chineseYearSeparator)).last ?? date
+        date = date.replacingOccurrences(of: chineseWeekdayPrefix, with: " Week ")
         let jieqi = " " + (getJieQi(date: from) ?? "")
         date = date.appending(jieqi)
         return date
