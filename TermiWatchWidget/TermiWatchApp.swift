@@ -17,7 +17,8 @@ private let watchPreviewMinimumHeight: CGFloat = 220
 private let watchPreviewCornerRadius: CGFloat = 36
 private let watchPreviewControlGap: CGFloat = 16
 private let watchPreviewStatusPadding: CGFloat = 14
-private let watchPreviewStatusContentInset: CGFloat = 24
+private let watchPreviewAnimationTopInset: CGFloat = 36
+private let watchPreviewStatusContentInset: CGFloat = 38
 private let watchPreviewContentInset: CGFloat = 8
 private let themePickerTopInset: CGFloat = 8
 
@@ -52,6 +53,7 @@ struct TermiWatch: App {
     @State private var isShowingFaceLineEditor = false
     @State private var faceLines = selectedFaceLines()
     @State private var faceTheme = selectedFaceTheme()
+    @State private var faceAnimation = selectedFaceAnimation()
     @State private var didRunInitialRefresh = false
     @State var userName = terminalName()
     @State var hostName = machineName()
@@ -68,7 +70,7 @@ struct TermiWatch: App {
                         VStack(spacing: 0) {
                             Color.clear.frame(height: watchPreviewControlGap)
 
-                            WatchFacePreview(viewModel: viewModel, faceLines: faceLines, theme: faceTheme)
+                            WatchFacePreview(viewModel: viewModel, faceLines: faceLines, theme: faceTheme, animation: faceAnimation)
                                 .frame(width: previewWidth, height: previewHeight, alignment: .top)
                                 .clipShape(RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous))
                                 .overlay {
@@ -80,6 +82,10 @@ struct TermiWatch: App {
                             ThemePickerStrip(selectedTheme: $faceTheme, onThemeChange: saveThemeSelection)
                                 .padding(.horizontal, 16)
                                 .padding(.top, watchPreviewControlGap + themePickerTopInset)
+
+                            AnimationPickerDropdown(selectedAnimation: $faceAnimation, onAnimationChange: saveAnimationSelection)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 10)
                         }
                         .frame(maxWidth: .infinity, alignment: .top)
                     }
@@ -202,6 +208,7 @@ struct TermiWatch: App {
         userdefaults?.set(userName, forKey: qUserNameKey)
         userdefaults?.set(hostName, forKey: qMachineNameKey)
         saveSelectedFaceTheme(faceTheme, userDefaults: userdefaults)
+        saveSelectedFaceAnimation(faceAnimation, userDefaults: userdefaults)
         userdefaults?.synchronize()
         session.syncSettingsToWatch()
 
@@ -239,10 +246,17 @@ struct TermiWatch: App {
         refreshWidgets()
     }
 
+    func saveAnimationSelection(_ animation: TermiFaceAnimation) {
+        faceAnimation = animation
+        saveSelectedFaceAnimation(animation, userDefaults: userdefaults)
+        refreshWidgets()
+    }
+
     func savePromptIdentity() {
         userdefaults?.set(userName, forKey: qUserNameKey)
         userdefaults?.set(hostName, forKey: qMachineNameKey)
         saveSelectedFaceTheme(faceTheme, userDefaults: userdefaults)
+        saveSelectedFaceAnimation(faceAnimation, userDefaults: userdefaults)
         userdefaults?.synchronize()
         refreshWidgets()
     }
@@ -347,16 +361,73 @@ struct ThemePickerStrip: View {
     }
 }
 
+struct AnimationPickerDropdown: View {
+    @Binding var selectedAnimation: TermiFaceAnimation
+    let onAnimationChange: (TermiFaceAnimation) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(TermiFaceAnimation.allCases) { animation in
+                Button {
+                    selectedAnimation = animation
+                    onAnimationChange(animation)
+                } label: {
+                    Label(LocalizedStringKey(animation.titleKey), systemImage: animation.systemImage)
+                }
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: selectedAnimation.systemImage)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.green)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(LocalizedStringKey("Animation"))
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                    Text(LocalizedStringKey(selectedAnimation.titleKey))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.gray)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.white.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(LocalizedStringKey("Animation"))
+    }
+}
+
 struct WatchFacePreview: View {
     let viewModel: QTermiViewModel
     let faceLines: [TermiFaceLine]
     let theme: TermiFaceTheme
+    let animation: TermiFaceAnimation
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            ContentView(viewModel: viewModel, faceLines: faceLines, theme: theme)
+            ContentView(viewModel: viewModel, faceLines: faceLines, theme: theme, animation: animation)
                 .foregroundStyle(theme.textColor)
                 .padding(.top, watchPreviewStatusContentInset)
+
+            TermiCornerActivityView(theme: theme, animation: animation)
+                .padding(.top, watchPreviewAnimationTopInset)
+                .padding(.horizontal, watchPreviewStatusPadding)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .allowsHitTesting(false)
 
             TimelineView(.periodic(from: Date(), by: 60)) { timeline in
                 Text(Self.statusTimeFormatter.string(from: timeline.date))

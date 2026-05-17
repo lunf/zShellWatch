@@ -64,6 +64,10 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
             message[qFaceThemeKey] = faceTheme
         }
 
+        if let faceAnimation = userdefaults?.string(forKey: qFaceAnimationKey) {
+            message[qFaceAnimationKey] = faceAnimation
+        }
+
         sendApplicationContext(message)
         sendMessage(message: message)
     }
@@ -172,6 +176,10 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
 
         if let faceTheme = message[qFaceThemeKey] as? String {
             userdefaults?.set(faceTheme, forKey: qFaceThemeKey)
+        }
+
+        if let faceAnimation = message[qFaceAnimationKey] as? String {
+            userdefaults?.set(faceAnimation, forKey: qFaceAnimationKey)
         }
 
         if let faceImage = message[qFaceImageKey] as? String {
