@@ -45,10 +45,13 @@ struct TermiWatch: App {
     @State private var errorMessage = ""
     @State private var isShowingError = false
     @State private var syncStatusMessage = ""
-    @State private var isShowingSyncStatus = false
+    @State private var isShowingSyncToast = false
     @State private var locationStatus = "Checking"
     @State private var healthStatus = "Checking"
     @State private var watchStatus = "Checking"
+    @State private var syncStatusTitle = "Not Synced"
+    @State private var syncStatusDetail = "Tap export to send the current face."
+    @State private var lastSyncDate: Date?
     @State private var isShowingStatusPanel = false
     @State private var isShowingFaceLineEditor = false
     @State private var faceLines = selectedFaceLines()
@@ -126,16 +129,20 @@ struct TermiWatch: App {
                         .accessibilityLabel(LocalizedStringKey("Sync Watch Face"))
                     }
                 }
+                .overlay(alignment: .top) {
+                    if isShowingSyncToast {
+                        SyncToastView(title: syncStatusTitle, message: syncStatusMessage)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                            .zIndex(1)
+                    }
+                }
             }
             .alert(LocalizedStringKey("Error"), isPresented: $isShowingError) {
                 Button(LocalizedStringKey("OK"), role: .cancel) {}
             } message: {
                 Text(errorMessage)
-            }
-            .alert(LocalizedStringKey("Sync Watch Face"), isPresented: $isShowingSyncStatus) {
-                Button(LocalizedStringKey("OK"), role: .cancel) {}
-            } message: {
-                Text(syncStatusMessage)
             }
             .sheet(isPresented: $isShowingFaceLineEditor) {
                 FaceLineEditorView(
@@ -145,7 +152,9 @@ struct TermiWatch: App {
                     onPromptIdentityChange: savePromptIdentity,
                     onLinesChange: saveFaceLineSelection
                 )
-                .onDisappear(perform: refreshWidgets)
+                .onDisappear {
+                    refreshWidgets()
+                }
             }
 
         }
@@ -185,10 +194,30 @@ struct TermiWatch: App {
             statusRow(title: LocalizedStringKey("Health"), value: healthStatus)
             statusRow(title: LocalizedStringKey("Watch"), value: watchStatus)
             statusRow(title: LocalizedStringKey("Weather Source"), value: qWeatherSourceName)
+            Divider().padding(.vertical, 4)
+            statusRow(title: LocalizedStringKey("Sync"), value: syncStatusTitle)
+            if !syncStatusDetail.isEmpty {
+                Text(syncStatusDetail)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            statusRow(title: LocalizedStringKey("Last Sync"), value: lastSyncText)
         }
         .frame(width: 300, alignment: .leading)
         .font(.system(size: 12))
     }
+
+    var lastSyncText: String {
+        guard let lastSyncDate else { return "Never" }
+        return Self.syncDateFormatter.string(from: lastSyncDate)
+    }
+
+    private static let syncDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .medium
+        return formatter
+    }()
 
     func statusRow(title: LocalizedStringKey, value: String) -> some View {
         HStack {
@@ -199,18 +228,25 @@ struct TermiWatch: App {
     }
 
     func syncWatchFace() {
-        refreshWidgets()
-        syncStatusMessage = syncStatusText()
-        isShowingSyncStatus = true
+        syncStatusTitle = "Sending"
+        syncStatusDetail = "Sending current face settings to Apple Watch..."
+        showSyncToast()
+        refreshWidgets(syncToWatch: false)
+        session.syncSettingsToWatch { result in
+            applySyncResult(result)
+            showSyncToast()
+        }
     }
 
-    func refreshWidgets() {
+    func refreshWidgets(syncToWatch: Bool = true) {
         userdefaults?.set(userName, forKey: qUserNameKey)
         userdefaults?.set(hostName, forKey: qMachineNameKey)
         saveSelectedFaceTheme(faceTheme, userDefaults: userdefaults)
         saveSelectedFaceAnimation(faceAnimation, userDefaults: userdefaults)
         userdefaults?.synchronize()
-        session.syncSettingsToWatch()
+        if syncToWatch {
+            session.syncSettingsToWatch()
+        }
 
         viewModel.updateModel()
         WidgetCenter.shared.reloadTimelines(ofKind: "HealthWidget")
@@ -284,30 +320,36 @@ struct TermiWatch: App {
         }
     }
 
-    func syncStatusText() -> String {
-        guard WCSession.isSupported() else {
-            return "Watch connectivity is not supported on this device."
+    func applySyncResult(_ result: WatchSettingsSyncResult) {
+        switch result {
+        case .delivered(let date):
+            syncStatusTitle = "Sent to Watch"
+            syncStatusDetail = "Apple Watch acknowledged the update. Keep zShellWatch open on the watch to see it immediately."
+            lastSyncDate = date
+        case .saved(let date, let reason):
+            syncStatusTitle = "Saved for Watch"
+            syncStatusDetail = reason
+            lastSyncDate = date
+        case .failed(let date, let reason):
+            syncStatusTitle = "Sync Failed"
+            syncStatusDetail = reason
+            lastSyncDate = date
+        }
+    }
+
+    func showSyncToast() {
+        syncStatusMessage = syncStatusDetail
+        withAnimation(.easeOut(duration: 0.2)) {
+            isShowingSyncToast = true
         }
 
-        let watchSession = WCSession.default
-
-        guard watchSession.activationState == .activated else {
-            return "Watch connection is not active yet. Open the watch app once, then try again."
+        let currentMessage = syncStatusMessage
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            guard currentMessage == syncStatusMessage else { return }
+            withAnimation(.easeIn(duration: 0.2)) {
+                isShowingSyncToast = false
+            }
         }
-
-        guard watchSession.isPaired else {
-            return "No paired Apple Watch was found."
-        }
-
-        guard watchSession.isWatchAppInstalled else {
-            return "The Watch app is not installed. Install it on Apple Watch, then sync again."
-        }
-
-        if watchSession.isReachable {
-            return "Sent to Apple Watch. Keep the watch app open to see the update immediately."
-        }
-
-        return "Saved for Apple Watch. Open zShellWatch on the watch to apply the update."
     }
 
     func showError(_ message: String) {
@@ -408,6 +450,68 @@ struct AnimationPickerDropdown: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(LocalizedStringKey("Animation"))
+    }
+}
+
+struct SyncToastView: View {
+    let title: String
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: iconName)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(iconColor)
+                .frame(width: 22, height: 22)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+
+                Text(message)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.white.opacity(0.78))
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.black.opacity(0.92))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(iconColor.opacity(0.7), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 6)
+    }
+
+    private var iconName: String {
+        switch title {
+        case "Sent to Watch":
+            return "checkmark.circle.fill"
+        case "Saved for Watch", "Sending":
+            return "arrow.triangle.2.circlepath.circle.fill"
+        case "Sync Failed":
+            return "exclamationmark.triangle.fill"
+        default:
+            return "info.circle.fill"
+        }
+    }
+
+    private var iconColor: Color {
+        switch title {
+        case "Sent to Watch":
+            return .green
+        case "Saved for Watch", "Sending":
+            return .orange
+        case "Sync Failed":
+            return .red
+        default:
+            return .green
+        }
     }
 }
 

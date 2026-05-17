@@ -13,6 +13,8 @@
 "Location" = "定位";
 "Watch" = "手表";
 "Weather Source" = "天气来源";
+"Sync" = "同步";
+"Last Sync" = "上次同步";
 "Error" = "错误";
 "OK" = "确定";
 

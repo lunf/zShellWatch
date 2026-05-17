@@ -14,6 +14,12 @@ private let watchSessionSyncCommandKey = "syncCommand"
 private let watchSessionSyncSettingsCommand = "syncSettings"
 private let watchSessionResetBackgroundsCommand = "resetBackgrounds"
 
+enum WatchSettingsSyncResult {
+    case delivered(Date)
+    case saved(Date, reason: String)
+    case failed(Date, reason: String)
+}
+
 extension Notification.Name {
     static let watchSessionDidUpdateConfiguration = Notification.Name("watchSessionDidUpdateConfiguration")
 }
@@ -41,7 +47,14 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         }
     }
 
-    func syncSettingsToWatch() {
+    func syncSettingsToWatch(completion: ((WatchSettingsSyncResult) -> Void)? = nil) {
+        guard WCSession.isSupported() else {
+            DispatchQueue.main.async {
+                completion?(.failed(Date(), reason: "Watch connectivity is not supported on this device."))
+            }
+            return
+        }
+
         var message: [String: Any] = [watchSessionSyncCommandKey: watchSessionSyncSettingsCommand]
 
         if let userName = userdefaults?.string(forKey: qUserNameKey) {
@@ -68,13 +81,63 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
             message[qFaceAnimationKey] = faceAnimation
         }
 
-        sendApplicationContext(message)
-        sendMessage(message: message)
+        let session = WCSession.default
+
+        guard session.activationState == .activated else {
+            DispatchQueue.main.async {
+                completion?(.failed(Date(), reason: "Watch connection is not active yet. Open the watch app once, then try again."))
+            }
+            return
+        }
+
+#if os(iOS)
+        guard session.isPaired else {
+            DispatchQueue.main.async {
+                completion?(.failed(Date(), reason: "No paired Apple Watch was found."))
+            }
+            return
+        }
+
+        guard session.isWatchAppInstalled else {
+            DispatchQueue.main.async {
+                completion?(.failed(Date(), reason: "The Watch app is not installed. Install it on Apple Watch, then sync again."))
+            }
+            return
+        }
+#endif
+
+        let contextError = sendApplicationContext(message)
+
+        guard session.isReachable else {
+            DispatchQueue.main.async {
+                if let contextError {
+                    completion?(.failed(Date(), reason: contextError.localizedDescription))
+                } else {
+                    completion?(.saved(Date(), reason: "Watch is not reachable. The update was saved and will apply when zShellWatch opens on Apple Watch."))
+                }
+            }
+            return
+        }
+
+        session.sendMessage(message, replyHandler: { _ in
+            DispatchQueue.main.async {
+                completion?(.delivered(Date()))
+            }
+        }) { error in
+            watchSessionLogger.error("Error sending settings to Apple Watch: \(error.localizedDescription, privacy: .public)")
+            DispatchQueue.main.async {
+                if contextError == nil {
+                    completion?(.saved(Date(), reason: "Immediate sync failed, but the update was saved for Apple Watch. \(error.localizedDescription)"))
+                } else {
+                    completion?(.failed(Date(), reason: error.localizedDescription))
+                }
+            }
+        }
     }
 
     func resetWatchBackgrounds() {
         let message: [String: Any] = [watchSessionSyncCommandKey: watchSessionResetBackgroundsCommand]
-        sendApplicationContext(message)
+        _ = sendApplicationContext(message)
         sendMessage(message: message)
     }
     
@@ -129,6 +192,12 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         applySettings(message)
     }
 
+    func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
+        watchSessionLogger.info("Received message with reply: \(String(describing: message), privacy: .public)")
+        applySettings(message)
+        replyHandler(["status": "applied"])
+    }
+
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) {
         watchSessionLogger.info("Received application context: \(String(describing: applicationContext), privacy: .public)")
         applySettings(applicationContext)
@@ -151,13 +220,15 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         }
     }
 
-    private func sendApplicationContext(_ message: [String: Any]) {
-        guard WCSession.isSupported() else { return }
+    private func sendApplicationContext(_ message: [String: Any]) -> Error? {
+        guard WCSession.isSupported() else { return nil }
 
         do {
             try WCSession.default.updateApplicationContext(message)
+            return nil
         } catch {
             watchSessionLogger.error("Error updating application context: \(error.localizedDescription, privacy: .public)")
+            return error
         }
     }
 

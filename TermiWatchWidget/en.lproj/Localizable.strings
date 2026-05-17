@@ -13,6 +13,8 @@
 "Location" = "Location";
 "Watch" = "Watch";
 "Weather Source" = "Weather Source";
+"Sync" = "Sync";
+"Last Sync" = "Last Sync";
 "Error" = "Error";
 "OK" = "OK";
 "Custom User" = "Custom User";
