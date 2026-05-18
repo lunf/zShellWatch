@@ -1,104 +1,193 @@
-# Terminal Watch Widget
-[中文说明](https://github.com/qianlishun/TermiWatchWidget/wiki/中文说明)
+# zShellWatch
 
-Terminal Watch Widget Face for Apple Watch.
+zShellWatch is a terminal-inspired Apple Watch companion app and widget project. The iPhone app is used to preview, configure, and sync a shell-style watch face, while the watchOS app displays the selected face on Apple Watch.
 
-![Watch Face](Screenshots/Watch_Preview.png)
+This project is inspired by:
 
-For devices running watchOS 10 iOS17 or higher.
+- [kuglee/TermiWatch](https://github.com/kuglee/TermiWatch/)
+- [qianlishun/TermiWatchWidget](https://github.com/qianlishun/TermiWatchWidget)
 
-Due to the new version of WatchOS not supporting app resident foreground display,
+Important limitation: `zShellWatch` is not an Apple system watch face and does not replace the default watch face. It renders a watch-face-like screen inside the watchOS app, so the face is visible while the watch app is open.
 
-here we use widgets to achieve a Watch Face similar to the Terminal effect.
+## Features
 
-Thanks for TermiWatch https://github.com/kuglee/TermiWatch/
+### Quick Preview
 
-# Future
-Use **WeatherKit** to obtain weather information. **WeatherKit** only supports **paid developer accounts**.  
-~Next, I will add other methods to obtain weather data.~  
-**qweather** has been introduced, and you can apply for a Key to replace the WeatherKit yourself.  https://dev.qweather.com/en/  
+<a href="Preview/quick-preview.mov">
+  <img src="Preview/preview.png" width="320">
+</a>
 
-#### Custom background image added.  
-#### Add upload image function, auto-crop set as dial background image.  
-  * ~Attempt to add dynamic background image, power consumption is too high, give up...~
-  
-# How to install
+### iPhone control app
 
-## Prerequisites && Adding a developer account to Xcode
-  Refer to TermiWatch's tutorial
-  - *TermiWatcht* https://github.com/kuglee/TermiWatch/blob/master/README.md
+- Live Apple Watch-style preview in the main screen.
+- Dark terminal UI with a gray navigation bar.
+- Navigation bar actions for connection status, line configuration, and watch sync.
+- Auto-hiding sync feedback toast instead of blocking alert dialogs.
+- Status panel for Location, Health, Watch pairing, Weather source, and last sync state.
+- Terminal user and machine name configuration.
+- Shared settings storage through App Groups.
 
-  1. Xcode Settings Tips  
-    <img src="Screenshots/Xcode_Settings.png" width="60%" height="auto" />  
-    1. Project file navigator  
-    2. Find navigator  
-    3. Project main file, click to display the project settings window on the right  
-    4. Targets. Click on different targets to modify their settings  
-    5. Schemes. Switch the schemes to compile apps for iPhone or Watch
+### Watch face preview and watch app
 
+- Terminal prompt layout similar to `user@machine:~ $`.
+- Configurable command prompt line.
+- Status-bar-like current time in the iPhone preview so the preview resembles the real watch app.
+- Apple Watch-shaped rounded preview border.
+- Dynamic preview height based on visible face lines.
+- Watch app receives the configured face from the iPhone app and displays only that synced face.
 
-  2. For each of the 3 **targets** replece *void* in the **Bundle Identifier** field with the name of your developer account. (The name of your Apple ID without the *@xxxx.com*.)  
-  <img src="Screenshots/Xcode_Settings1.png" width="60%" height="auto" />
-  
-  ***
-      
-  3. Change the project's team:
-      1. Select the **Signing & Capabilities** tab:    
-      1. For each of the 3 **targets** change the **Team** to your team. (Usually this is your name.)  
-  4. Manually replace bundle identifiers:
-        1. Select **Xcode** menu -> **Find** -> **Find and Replace in Project…**.
-        1. In the **Text** field type *void* (Maybe others like *xxx* in com.xxx.TermiWatch)
-        1. In the **With** field type the name of your developer account. (The name of your Apple ID without the @xxxx.com.)
-        1. Click the **Replace All** button.
-  5. If there is an error in WeatherKit or HealthKit, please set Capability. If you do not use WeatherKit, you do not need to set up WeatherKit.  
-  <img src="Screenshots/Xcode_Settings2.png" width="60%" height="auto" />
+### Configurable face lines
 
-***
+Users can choose which lines appear and reorder them from the Face Lines screen.
 
- log in to the developer page  https://developer.apple.com/account , certificate->Identifiers，Find the corresponding bundleID.  
-Click to enter, Capabilities -> find WeatherKit and HealthKit ☑️，in App Services find WeatherKit ☑️  
-  <img src="Screenshots/IdentifiersSettings.png" width="60%" height="auto" />   
-  
-***
+Available lines include:
 
-  6. Added **qweather** module, If using 'qweather' to replace weatherkit https://dev.qweather.com/en/docs/
-      1. Go to https://id.qweather.com/#/login to apply for the API Key for qweather  
-      1. Refer doc https://dev.qweather.com/en/docs/configuration/project-and-key/
-      1. Copy **Key** to **HFWeatherKey**  (/TermiWatchWidget/QConfiguration.swift)
-      1. Please delete the **Weatherkit** for each of the 3 **targets**  
-      <img src="Screenshots/Xcode_Settings3.png" width="60%" height="auto" />
+- Command Prompt
+- Date
+- Time
+- Current Weather
+- Temperature
+- Humidity
+- Next Weather
+- Battery
+- Rings
+- Steps
+- Calories
+- Heart Rate
+- Prompt
 
-## Installing the app
-  1. Watch and iPhone Go to **Settings** -> **Privacy and Security** -> open **Developer Mode** 
-  1. Plug your phone into your computer.
-  1. Unlock your phone and trust your computer.
-  1. Two ways  
-    1. Select **Xcode** menu -> **Product** -> **Scheme**, select **TermiWatchWdiget**, -> **Destination** select your phone.  
-    2. Select **Xcode** menu -> **Product** -> **Run**.  
-    3. Wait for the app to install on your phone.  
-    4. Select **Xcode** menu -> **Product** -> **Scheme**, select **TermiWatchWdiget Watch App**, **Product** -> **Destination** select your watch.    
-    5. Select **Xcode** menu -> **Product** -> **Run**.  
-    6. Wait for the app to install on your watch.   
-  1. Or  
-    1. Select **Xcode** menu -> **Product** -> **Destination**. At the **Device** section select your phone.  
-    2. Select **Xcode** menu -> **Product** -> **Run**.  
-    3. Wait for the app to install on your phone.  
-    4. iPhone Go to **Settings** -> **General** -> **Profiles & Device Management** on your phone to trust the app.  
-    5. Install the watchOS app from the **Watch** app.  
-  1. If  **Device** list does not display 'watch', check the network connection is on the local area network. If it does not work, restart the phone
-## Watch Settings
-  1. Open this App on iPhone, click **"Sync Watch Face"**.  
-  1. Check "My Faces", select and set it.
+Weather lines are hidden automatically when no weather provider is configured. Health lines require HealthKit permission.
 
-## Custom UI
-  1. Find /TermiWatchWidget/QConfiguration.swift, modify text, color. 
-  1. Image path on TermiWatchWidget/TermiWatchWidget_Widget/Assets.xcassets/LeftTopImage / image,  you can replace it
-  1. More custom go to /TermiWatchWidget Watch App/View/QCommonView.swift  
-  1. When the language is Chinese, the [DATE] is based on the Chinese lunar calendar, while for other languages it is "EEE MM/dd YYYY". You can change it yourself. TWExtension.swift - currentDate.  
+### Themes
 
-### Possible defects
-  1. Due to the refresh mechanism of Widgets, there is a limit on the number of daily updates, and there may be a lag in data updates.  
-  1. The **healthRefreshInterval** can be modified to adjust the refresh interval of health information.  
-  1. When the data has not been updated for a long time, you can click on the Widget to enter the app and manually refresh it.
+zShellWatch includes multiple terminal-style themes:
 
-  
+- Default Theme: classic terminal face.
+- Git Theme: git prompt styling, branch label, rotating line colors, and badge-style changed values.
+- Cloud Theme: cloud/thunder prompt styling with rainbow text behavior.
+- Icon Theme: icon-first layout with face line labels removed.
+- Colorful Theme: rainbow prompt styling and stronger accent colors.
+
+### Animations
+
+The top status area can show a selectable animation:
+
+- Dot Line
+- Matrix Text
+- Pacman
+- Terminal Cursor
+- Command Loader
+- Signal Sweep
+- No Animation
+
+Animations are intentionally small and status-bar sized so they do not cover the watch face content.
+
+### Sync
+
+The iPhone app syncs the selected face configuration to Apple Watch using WatchConnectivity. Sync includes:
+
+- Visible face lines and order.
+- Selected theme.
+- Selected animation.
+- Terminal user.
+- Machine name.
+
+The app shows lightweight sync feedback so it is easier to tell whether the watch received the latest configuration.
+
+### Health
+
+HealthKit support is used for activity and health-related face lines, including rings, steps, calories, and heart rate. Health data requires user permission on device.
+
+HealthKit can be controlled from:
+
+```swift
+let qUseHealthKit = true
+```
+
+### Weather
+
+Weather support is optional. If no provider is configured, the weather feature is disabled and weather face lines are hidden.
+
+Supported weather modes:
+
+- QWeather API key through `HFWeatherKey`.
+- WeatherKit through `qUseWeatherKit`.
+- Disabled when both are unavailable.
+
+Configuration is in [QConfiguration.swift](TermiWatchWidget/Configuration/QConfiguration.swift):
+
+```swift
+let qUseWeatherKit = false
+let HFWeatherKey = ""
+```
+
+Personal Apple development teams may not support the WeatherKit capability. In that case, keep WeatherKit disabled and use QWeather only if you have a key.
+
+### Widgets
+
+The project includes widget targets for terminal-style weather and health information. Weather widgets follow the same provider rule as the main app: if no weather provider is configured, weather data is skipped.
+
+### SVG weather icons
+
+The `SVGView` code is used to render bundled weather SVG icons from `HFBundle.bundle` for QWeather conditions. It is not a general user-facing SVG image feature.
+
+## Requirements
+
+- Xcode.
+- iOS app target.
+- watchOS app target.
+- Paired Apple Watch or iOS/watchOS simulators.
+- App Groups capability for shared settings.
+- HealthKit capability if health lines are enabled.
+- Optional QWeather key or WeatherKit capability for weather lines.
+
+## Setup
+
+1. Open `TermiWatchWidget.xcodeproj` in Xcode.
+2. Select the `TermiWatchWidget` scheme.
+3. Configure signing for the iOS app, watch app, and widget targets.
+4. Confirm the App Group matches:
+
+```swift
+let qGroupBundleID = "group.com.github.lunf.zShellWatch"
+```
+
+5. Enable HealthKit if you want health lines.
+6. Configure weather only if you want weather lines:
+
+```swift
+let HFWeatherKey = "your-qweather-key"
+```
+
+or:
+
+```swift
+let qUseWeatherKit = true
+```
+
+7. Build and run the iOS app on a paired iPhone or simulator.
+8. Install the watch app on Apple Watch.
+9. Use the iPhone app to configure the face, then tap the sync action in the navigation bar.
+
+## Project Structure
+
+- [TermiWatchWidget/TermiWatchApp.swift](TermiWatchWidget/TermiWatchApp.swift): main iPhone app screen.
+- [TermiWatchWidget/App/Components](TermiWatchWidget/App/Components): iPhone UI components such as the preview, theme picker, animation picker, sync toast, status panel, and face line editor.
+- [TermiWatchWidget/Configuration](TermiWatchWidget/Configuration): shared face configuration, themes, animations, line definitions, sync payload, and settings storage.
+- [TermiWatchWidget Watch App](TermiWatchWidget%20Watch%20App): watchOS app and watch face rendering.
+- [TermiWatchWidget_Widget](TermiWatchWidget_Widget): widget extension, weather utilities, and health observer.
+- [TermiWatchWidget/SVGView](TermiWatchWidget/SVGView): SVG rendering support for bundled weather icons.
+
+## Known Limitations
+
+- This app cannot install a real Apple system watch face.
+- The watch face display depends on the watchOS app staying open.
+- watchOS may sleep or background the app according to system rules.
+- Custom background images are not supported.
+- Weather lines are disabled unless QWeather or WeatherKit is configured.
+- Health lines require HealthKit permission and device support.
+- Watch sync requires the companion watch app to be installed and paired.
+
+## License
+
+This project is licensed under GPL-3.0. See [LICENSE.md](LICENSE.md).
