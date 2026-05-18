@@ -13,9 +13,7 @@ Important limitation: `zShellWatch` is not an Apple system watch face and does n
 
 ### Quick Preview
 
-<a href="Preview/quick-preview.mov">
-  <img src="Preview/preview.png" width="320">
-</a>
+<img src="Preview/quick-preview.gif" width="480" alt="Quick preview">
 
 ### iPhone control app
 
