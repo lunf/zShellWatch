@@ -21,7 +21,7 @@ struct WatchFaceConfiguration: Codable, Equatable {
     ) {
         self.terminalUser = terminalUser
         self.machineName = machineNameValue
-        self.lines = lines
+        self.lines = availableFaceLines(from: lines)
         self.theme = theme
         self.animation = animation
     }

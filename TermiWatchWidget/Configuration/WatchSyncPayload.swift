@@ -31,7 +31,9 @@ struct WatchSyncPayload: Codable, Equatable {
         self.command = command
 
         if command == .syncSettings {
-            let lines = (message[qFaceLineOrderKey] as? [String])?.compactMap(TermiFaceLine.init(rawValue:)) ?? selectedFaceLines()
+            let lines = availableFaceLines(
+                from: (message[qFaceLineOrderKey] as? [String])?.compactMap(TermiFaceLine.init(rawValue:)) ?? selectedFaceLines()
+            )
             let theme = (message[qFaceThemeKey] as? String).flatMap(TermiFaceTheme.init(rawValue:)) ?? selectedFaceTheme()
             let animation = (message[qFaceAnimationKey] as? String).flatMap(TermiFaceAnimation.init(rawValue:)) ?? selectedFaceAnimation()
             configuration = WatchFaceConfiguration(

@@ -240,9 +240,10 @@ struct TermiFaceView: View {
     var body: some View {
         TimelineView(.periodic(from: Date(), by: 60)) { timeline in
             let rowHeight = faceBaseRowHeight()
+            let visibleLines = availableFaceLines(from: lines)
 
             VStack(alignment: .leading, spacing: qFaceRowSpacing) {
-                ForEach(lines) { line in
+                ForEach(visibleLines) { line in
                     faceRow(line, date: timeline.date)
                         .frame(height: rowHeight * termiFaceLineHeightWeight(line, theme: theme))
                 }
@@ -270,13 +271,14 @@ struct TermiFaceView: View {
 
     private func faceBaseRowHeight() -> CGFloat {
         let defaultHeight = qRowHeight + 0.5
-        let totalLineWeight = lines.reduce(CGFloat(0)) { $0 + termiFaceLineHeightWeight($1, theme: theme) }
+        let visibleLines = availableFaceLines(from: lines)
+        let totalLineWeight = visibleLines.reduce(CGFloat(0)) { $0 + termiFaceLineHeightWeight($1, theme: theme) }
 
         guard let displayHeight = context?.displaySize.height, totalLineWeight > 0 else {
             return defaultHeight
         }
 
-        let totalSpacing = CGFloat(max(0, lines.count - 1)) * qFaceRowSpacing
+        let totalSpacing = CGFloat(max(0, visibleLines.count - 1)) * qFaceRowSpacing
         let verticalPadding = qFacePaddingTop + qFacePaddingBottom
         return ((displayHeight - verticalPadding - totalSpacing) / totalLineWeight) + 0.5
     }

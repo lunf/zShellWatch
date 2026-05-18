@@ -40,9 +40,22 @@ enum TermiFaceLine: String, CaseIterable, Identifiable, Hashable, Codable {
         case .prompt: return "Prompt"
         }
     }
+
+    var requiresWeather: Bool {
+        switch self {
+        case .currentWeather, .temperature, .humidity, .nextWeather:
+            return true
+        case .promptNow, .date, .time, .battery, .rings, .steps, .calories, .heartRate, .prompt:
+            return false
+        }
+    }
+
+    var isAvailable: Bool {
+        !requiresWeather || qIsWeatherEnabled
+    }
 }
 
-let qDefaultFaceLines: [TermiFaceLine] = [
+private let qBaseDefaultFaceLines: [TermiFaceLine] = [
     .promptNow,
     .currentWeather,
     .temperature,
@@ -55,17 +68,29 @@ let qDefaultFaceLines: [TermiFaceLine] = [
     .prompt
 ]
 
+var qDefaultFaceLines: [TermiFaceLine] {
+    qBaseDefaultFaceLines.filter(\.isAvailable)
+}
+
+var qAvailableFaceLines: [TermiFaceLine] {
+    TermiFaceLine.allCases.filter(\.isAvailable)
+}
+
+func availableFaceLines(from lines: [TermiFaceLine]) -> [TermiFaceLine] {
+    lines.filter(\.isAvailable)
+}
+
 func selectedFaceLines(userDefaults: UserDefaults? = qUserdefaults) -> [TermiFaceLine] {
     guard let lineIDs = userDefaults?.stringArray(forKey: qFaceLineOrderKey) else {
         return qDefaultFaceLines
     }
 
-    let lines = lineIDs.compactMap(TermiFaceLine.init(rawValue:))
+    let lines = availableFaceLines(from: lineIDs.compactMap(TermiFaceLine.init(rawValue:)))
     return lines.isEmpty ? qDefaultFaceLines : lines
 }
 
 func saveSelectedFaceLines(_ lines: [TermiFaceLine], userDefaults: UserDefaults? = qUserdefaults) {
-    userDefaults?.set(lines.map(\.rawValue), forKey: qFaceLineOrderKey)
+    userDefaults?.set(availableFaceLines(from: lines).map(\.rawValue), forKey: qFaceLineOrderKey)
     userDefaults?.synchronize()
 }
 

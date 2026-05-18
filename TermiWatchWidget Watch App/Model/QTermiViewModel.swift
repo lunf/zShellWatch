@@ -17,7 +17,7 @@ private final class QTermiDataService {
     private var widgetLocationManager: WidgetLocationManager?
 
     func fetchWeatherViewInfo(dateText: String? = nil) async -> WeatherViewInfo {
-        guard !HFWeatherKey.isEmpty || qUseWeatherKit else {
+        guard qIsWeatherEnabled else {
             return WeatherViewInfo()
         }
 

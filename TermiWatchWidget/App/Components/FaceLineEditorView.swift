@@ -15,7 +15,7 @@ struct FaceLineEditorView: View {
     @State private var editMode: EditMode = .inactive
 
     private var availableLines: [TermiFaceLine] {
-        TermiFaceLine.allCases.filter { !selectedLines.contains($0) }
+        qAvailableFaceLines.filter { !selectedLines.contains($0) }
     }
 
     private var isEditing: Bool {

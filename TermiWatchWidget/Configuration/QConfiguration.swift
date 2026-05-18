@@ -28,6 +28,10 @@ var qWeatherSourceName: String {
     return qUseWeatherKit ? "WeatherKit" : "Disabled"
 }
 
+var qIsWeatherEnabled: Bool {
+    !HFWeatherKey.isEmpty || qUseWeatherKit
+}
+
 let qGroupBundleID = "group.com.github.lunf.zShellWatch"
 
 let qUserdefaults: UserDefaults? = {

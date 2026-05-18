@@ -24,7 +24,7 @@ struct FaceSettingsStore {
     func saveConfiguration(_ configuration: WatchFaceConfiguration) {
         userDefaults?.set(configuration.terminalUser, forKey: qUserNameKey)
         userDefaults?.set(configuration.machineName, forKey: qMachineNameKey)
-        userDefaults?.set(configuration.lines.map(\.rawValue), forKey: qFaceLineOrderKey)
+        userDefaults?.set(availableFaceLines(from: configuration.lines).map(\.rawValue), forKey: qFaceLineOrderKey)
         userDefaults?.set(configuration.theme.rawValue, forKey: qFaceThemeKey)
         userDefaults?.set(configuration.animation.rawValue, forKey: qFaceAnimationKey)
 

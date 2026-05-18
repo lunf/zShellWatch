@@ -59,6 +59,11 @@ struct WeatherProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
+        guard qIsWeatherEnabled else {
+            completion(emptyWeatherTimeline(context: context))
+            return
+        }
+
         let formatter = getCurrentFormatter()
 
         widgetLocationManager.fetchLocation(handler: { location in
