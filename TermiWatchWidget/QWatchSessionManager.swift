@@ -10,9 +10,6 @@ import OSLog
 import WidgetKit
 
 private let watchSessionLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "WatchSession")
-private let watchSessionSyncCommandKey = "syncCommand"
-private let watchSessionSyncSettingsCommand = "syncSettings"
-private let watchSessionResetBackgroundsCommand = "resetBackgrounds"
 
 enum WatchSettingsSyncResult {
     case delivered(Date)
@@ -28,6 +25,7 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
     
     static let shared = WatchSessionManager()
     let userdefaults = qUserdefaults
+    private let settingsStore = FaceSettingsStore()
 
     private override init() {
         super.init()
@@ -55,31 +53,7 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
             return
         }
 
-        var message: [String: Any] = [watchSessionSyncCommandKey: watchSessionSyncSettingsCommand]
-
-        if let userName = userdefaults?.string(forKey: qUserNameKey) {
-            message[qUserNameKey] = userName
-        }
-
-        if let machineName = userdefaults?.string(forKey: qMachineNameKey) {
-            message[qMachineNameKey] = machineName
-        }
-
-        if let faceImage = userdefaults?.string(forKey: qFaceImageKey) {
-            message[qFaceImageKey] = faceImage
-        }
-
-        if let faceLineOrder = userdefaults?.stringArray(forKey: qFaceLineOrderKey) {
-            message[qFaceLineOrderKey] = faceLineOrder
-        }
-
-        if let faceTheme = userdefaults?.string(forKey: qFaceThemeKey) {
-            message[qFaceThemeKey] = faceTheme
-        }
-
-        if let faceAnimation = userdefaults?.string(forKey: qFaceAnimationKey) {
-            message[qFaceAnimationKey] = faceAnimation
-        }
+        let message = WatchSyncPayload(settingsStore: settingsStore).message
 
         let session = WCSession.default
 
@@ -135,23 +109,12 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         }
     }
 
-    func resetWatchBackgrounds() {
-        let message: [String: Any] = [watchSessionSyncCommandKey: watchSessionResetBackgroundsCommand]
-        _ = sendApplicationContext(message)
-        sendMessage(message: message)
-    }
-    
     func session(_ session: WCSession, didReceive file: WCSessionFile) {
         watchSessionLogger.info("Received file: \(String(describing: file.metadata), privacy: .public)")
         let key = file.metadata?["name"] as? String
         let path = FileManager.default.saveRecivedImage(srcURL: file.fileURL)
         if((key != nil) && (path != nil)){
             userdefaults?.setValue(path, forKey: key! );
-            
-            if(path?.contains("_") == true){
-                let custom = path?.components(separatedBy: "_").first
-                userdefaults?.setValue(custom, forKey: qCustomImageKey)
-            }
             userdefaults?.synchronize()
             reloadWidgetTimelines()
         }
@@ -233,6 +196,12 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
     }
 
     private func applySettings(_ message: [String: Any]) {
+        if let payload = WatchSyncPayload(message: message) {
+            settingsStore.applyPayload(payload)
+            reloadWidgetTimelines()
+            return
+        }
+
         if let userName = message[qUserNameKey] as? String {
             userdefaults?.set(userName, forKey: qUserNameKey)
         }
@@ -251,18 +220,6 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
 
         if let faceAnimation = message[qFaceAnimationKey] as? String {
             userdefaults?.set(faceAnimation, forKey: qFaceAnimationKey)
-        }
-
-        if let faceImage = message[qFaceImageKey] as? String {
-            userdefaults?.set(faceImage, forKey: qFaceImageKey)
-        }
-
-        if let command = message[watchSessionSyncCommandKey] as? String,
-           command == watchSessionResetBackgroundsCommand {
-            userdefaults?.setValue(nil, forKey: qWeatherImageKey)
-            userdefaults?.setValue(nil, forKey: qHealthImageKey)
-            userdefaults?.setValue(nil, forKey: qFaceImageKey)
-            userdefaults?.setValue(nil, forKey: qLeftTopImageKey)
         }
 
         userdefaults?.synchronize()

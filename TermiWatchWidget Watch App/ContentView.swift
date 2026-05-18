@@ -15,6 +15,8 @@ struct ContentView: View {
     @State private var storedFaceLines = selectedFaceLines()
     @State private var storedTheme = selectedFaceTheme()
     @State private var storedAnimation = selectedFaceAnimation()
+    @State private var storedConfiguration = FaceSettingsStore().loadConfiguration()
+    private let renderer = TerminalWatchFaceRenderer()
 
     init(viewModel: QTermiViewModel, faceLines: [TermiFaceLine]? = nil, theme: TermiFaceTheme? = nil, animation: TermiFaceAnimation? = nil) {
         self.viewModel = viewModel
@@ -24,13 +26,30 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TermiFaceView(context: nil, weather: viewModel.weather, health: viewModel.health, lines: configuredFaceLines ?? storedFaceLines, theme: configuredTheme ?? storedTheme, animation: configuredAnimation ?? storedAnimation)
+        renderer.render(
+            WatchFaceRenderRequest(
+                context: nil,
+                snapshot: viewModel.snapshot,
+                configuration: activeConfiguration
+            )
+        )
             .persistentSystemOverlays(.hidden)
             .onReceive(NotificationCenter.default.publisher(for: .watchSessionDidUpdateConfiguration)) { _ in
                 storedFaceLines = selectedFaceLines()
                 storedTheme = selectedFaceTheme()
                 storedAnimation = selectedFaceAnimation()
+                storedConfiguration = FaceSettingsStore().loadConfiguration()
             }
+    }
+
+    private var activeConfiguration: WatchFaceConfiguration {
+        WatchFaceConfiguration(
+            terminalUser: storedConfiguration.terminalUser,
+            machineName: storedConfiguration.machineName,
+            lines: configuredFaceLines ?? storedFaceLines,
+            theme: configuredTheme ?? storedTheme,
+            animation: configuredAnimation ?? storedAnimation
+        )
     }
 }
 

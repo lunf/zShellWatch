@@ -29,21 +29,12 @@ struct WeatherViewInfo {
     let after1Hours: QWeather
     let alert: String
     var dateText : String? = nil
-    var bgImage: String? = nil
 
     init(current: QWeather, after1Hours: QWeather, alert: String, dateText: String?) {
-        let userdefaults = qUserdefaults
-
         self.dateText = dateText
         self.current = current
         self.after1Hours = after1Hours
         self.alert = alert
-        self.bgImage = nil
-        if let imageName = userdefaults?.string(forKey: qWeatherImageKey) {
-            if let path = FileManager.default.getShareImagePath(imageName: imageName) {
-                self.bgImage = path
-            }
-        }
     }
     
     init(current: QWeather, after1Hours: QWeather, alert: String) {
@@ -116,13 +107,6 @@ struct WeatherRectangularView : View {
                 }.frame(height: rowHeight)
             }
         }
-#if os(watchOS)
-        .background(Image(contentsOf:  weather.bgImage ?? "")?.resizable()
-            .aspectRatio(contentMode: .fill).opacity(0.35))
-#else
-        .background(Image(contentsOf:  weather.bgImage ?? "")?.resizable()
-            .aspectRatio(contentMode: .fit).opacity(0.35))
-#endif
     }
 }
 
@@ -174,13 +158,39 @@ struct HealthRectangularView : View {
                 MyText("\(terminalName())@\(machineName()):~ $ ").frame(maxWidth: .infinity, alignment: .leading)
             }.frame(height: rowHeight)
         }
-#if os(watchOS)
-        .background(Image(contentsOf: health.bgImage ?? "")?.resizable()
-            .aspectRatio(contentMode: .fill).opacity(0.35))
-#else
-        .background(Image(contentsOf: health.bgImage ?? "")?.resizable()
-            .aspectRatio(contentMode: .fit).opacity(0.35))
-#endif
+    }
+}
+
+struct FaceDataSnapshot {
+    var weather: WeatherViewInfo
+    var health: HealthInfo
+
+    init(weather: WeatherViewInfo = WeatherViewInfo(), health: HealthInfo = HealthInfo()) {
+        self.weather = weather
+        self.health = health
+    }
+}
+
+struct WatchFaceRenderRequest {
+    let context: TimelineProviderContext?
+    let snapshot: FaceDataSnapshot
+    let configuration: WatchFaceConfiguration
+}
+
+protocol WatchFaceRendering {
+    associatedtype Body: View
+
+    @ViewBuilder
+    func render(_ request: WatchFaceRenderRequest) -> Body
+}
+
+struct TerminalWatchFaceRenderer: WatchFaceRendering {
+    func render(_ request: WatchFaceRenderRequest) -> some View {
+        TermiFaceView(
+            context: request.context,
+            snapshot: request.snapshot,
+            configuration: request.configuration
+        )
     }
 }
 
@@ -191,6 +201,41 @@ struct TermiFaceView: View {
     var lines: [TermiFaceLine] = selectedFaceLines()
     var theme: TermiFaceTheme = selectedFaceTheme()
     var animation: TermiFaceAnimation = selectedFaceAnimation()
+    var terminalUser: String = terminalName()
+    var machine: String = machineName()
+
+    init(
+        context: TimelineProviderContext?,
+        weather: WeatherViewInfo,
+        health: HealthInfo,
+        lines: [TermiFaceLine] = selectedFaceLines(),
+        theme: TermiFaceTheme = selectedFaceTheme(),
+        animation: TermiFaceAnimation = selectedFaceAnimation(),
+        terminalUser: String = terminalName(),
+        machine: String = machineName()
+    ) {
+        self.context = context
+        self.weather = weather
+        self.health = health
+        self.lines = lines
+        self.theme = theme
+        self.animation = animation
+        self.terminalUser = terminalUser
+        self.machine = machine
+    }
+
+    init(context: TimelineProviderContext?, snapshot: FaceDataSnapshot, configuration: WatchFaceConfiguration) {
+        self.init(
+            context: context,
+            weather: snapshot.weather,
+            health: snapshot.health,
+            lines: configuration.lines,
+            theme: configuration.theme,
+            animation: configuration.animation,
+            terminalUser: configuration.terminalUser,
+            machine: configuration.machineName
+        )
+    }
 
     var body: some View {
         TimelineView(.periodic(from: Date(), by: 60)) { timeline in
@@ -215,30 +260,12 @@ struct TermiFaceView: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
 #endif
-            .background {
-                if let backgroundImagePath, let image = Image(contentsOf: backgroundImagePath) {
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .opacity(0.35)
-                }
-            }
             .clipped()
         }
     }
 
     private var cornerActivityTopPadding: CGFloat {
         4
-    }
-
-    private var backgroundImagePath: String? {
-        let userDefaults = qUserdefaults
-        if let faceImageName = userDefaults?.string(forKey: qFaceImageKey),
-           let faceImagePath = FileManager.default.getShareImagePath(imageName: faceImageName) {
-            return faceImagePath
-        }
-
-        return weather.bgImage ?? health.bgImage
     }
 
     private func faceBaseRowHeight() -> CGFloat {
@@ -369,7 +396,7 @@ struct TermiFaceView: View {
     private func promptRow(command: String?) -> some View {
         if theme == .cloud {
             HStack(spacing: 4) {
-                MyText("\(terminalName())@\(machineName())", color: theme.promptColor)
+                MyText("\(terminalUser)@\(machine)", color: theme.promptColor)
                 Image(systemName: "cloud.fill")
                     .imageScale(.small)
                     .foregroundStyle(theme.accentColor)
@@ -383,7 +410,7 @@ struct TermiFaceView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         } else if theme == .icon {
             HStack(spacing: 4) {
-                MyText("\(terminalName())@\(machineName())", color: theme.promptColor)
+                MyText("\(terminalUser)@\(machine)", color: theme.promptColor)
                 Image(systemName: "terminal.fill")
                     .imageScale(.small)
                     .foregroundStyle(theme.accentColor)
@@ -394,7 +421,7 @@ struct TermiFaceView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         } else if theme == .colorful {
             HStack(spacing: 4) {
-                MyText("\(terminalName())@\(machineName())", color: theme.promptColor)
+                MyText("\(terminalUser)@\(machine)", color: theme.promptColor)
                 Image(systemName: "rainbow")
                     .imageScale(.small)
                     .foregroundStyle(rainbowGradient)
@@ -406,7 +433,7 @@ struct TermiFaceView: View {
         } else if theme == .git, let command {
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 0) {
-                    MyText("\(terminalName())@\(machineName()):~ ", color: theme.promptColor)
+                    MyText("\(terminalUser)@\(machine):~ ", color: theme.promptColor)
                     Text("(\(qGitThemeBranchName))")
                         .font(gitBranchFont)
                         .foregroundStyle(.cyan)
@@ -419,7 +446,7 @@ struct TermiFaceView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         } else if theme == .git {
             HStack(spacing: 0) {
-                MyText("\(terminalName())@\(machineName()):~ ", color: theme.promptColor)
+                MyText("\(terminalUser)@\(machine):~ ", color: theme.promptColor)
                 Text("(\(qGitThemeBranchName))")
                     .font(gitBranchFont)
                     .foregroundStyle(.cyan)
@@ -427,7 +454,7 @@ struct TermiFaceView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            MyText("\(terminalName())@\(machineName()):~ $\(command.map { " \($0)" } ?? " ")", color: theme.promptColor)
+            MyText("\(terminalUser)@\(machine):~ $\(command.map { " \($0)" } ?? " ")", color: theme.promptColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

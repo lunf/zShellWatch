@@ -211,6 +211,32 @@
 		6EAA2BB62AF0C24600368E8D /* JieQi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EAA2BB52AF0C24600368E8D /* JieQi.swift */; };
 		6EAA2BB72AF0E39F00368E8D /* JieQi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EAA2BB52AF0C24600368E8D /* JieQi.swift */; };
 		6EAA2BB82AF0E3A000368E8D /* JieQi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EAA2BB52AF0C24600368E8D /* JieQi.swift */; };
+		6EC0B0012F00000100C0B001 /* TermiFaceLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0012F00000100C0A001 /* TermiFaceLine.swift */; };
+		6EC0B0022F00000100C0B002 /* TermiFaceLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0012F00000100C0A001 /* TermiFaceLine.swift */; };
+		6EC0B0032F00000100C0B003 /* TermiFaceLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0012F00000100C0A001 /* TermiFaceLine.swift */; };
+		6EC0B0042F00000100C0B004 /* TermiFaceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0022F00000100C0A002 /* TermiFaceTheme.swift */; };
+		6EC0B0052F00000100C0B005 /* TermiFaceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0022F00000100C0A002 /* TermiFaceTheme.swift */; };
+		6EC0B0062F00000100C0B006 /* TermiFaceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0022F00000100C0A002 /* TermiFaceTheme.swift */; };
+		6EC0B0072F00000100C0B007 /* TermiFaceAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0032F00000100C0A003 /* TermiFaceAnimation.swift */; };
+		6EC0B0082F00000100C0B008 /* TermiFaceAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0032F00000100C0A003 /* TermiFaceAnimation.swift */; };
+		6EC0B0092F00000100C0B009 /* TermiFaceAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0032F00000100C0A003 /* TermiFaceAnimation.swift */; };
+		6EC0B00A2F00000100C0B00A /* WatchFaceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0042F00000100C0A004 /* WatchFaceConfiguration.swift */; };
+		6EC0B00B2F00000100C0B00B /* WatchFaceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0042F00000100C0A004 /* WatchFaceConfiguration.swift */; };
+		6EC0B00C2F00000100C0B00C /* WatchFaceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0042F00000100C0A004 /* WatchFaceConfiguration.swift */; };
+		6EC0B00D2F00000100C0B00D /* FaceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0052F00000100C0A005 /* FaceSettingsStore.swift */; };
+		6EC0B00E2F00000100C0B00E /* FaceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0052F00000100C0A005 /* FaceSettingsStore.swift */; };
+		6EC0B00F2F00000100C0B00F /* FaceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0052F00000100C0A005 /* FaceSettingsStore.swift */; };
+		6EC0B0102F00000100C0B010 /* WatchSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0062F00000100C0A006 /* WatchSyncPayload.swift */; };
+		6EC0B0112F00000100C0B011 /* WatchSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0062F00000100C0A006 /* WatchSyncPayload.swift */; };
+		6EC0B0122F00000100C0B012 /* WatchSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0A0062F00000100C0A006 /* WatchSyncPayload.swift */; };
+		6EC0D0012F00000200C0D001 /* WatchPreviewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0012F00000200C0C001 /* WatchPreviewLayout.swift */; };
+		6EC0D0022F00000200C0D002 /* ThemePickerStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0022F00000200C0C002 /* ThemePickerStrip.swift */; };
+		6EC0D0032F00000200C0D003 /* AnimationPickerDropdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0032F00000200C0C003 /* AnimationPickerDropdown.swift */; };
+		6EC0D0042F00000200C0D004 /* SyncToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0042F00000200C0C004 /* SyncToastView.swift */; };
+		6EC0D0052F00000200C0D005 /* WatchFacePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0052F00000200C0C005 /* WatchFacePreview.swift */; };
+		6EC0D0062F00000200C0D006 /* FaceLineEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0062F00000200C0C006 /* FaceLineEditorView.swift */; };
+		6EC0D0072F00000200C0D007 /* StatusPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0072F00000200C0C007 /* StatusPanelView.swift */; };
+		6EC0D0082F00000200C0D008 /* CLAuthorizationStatus+StatusText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC0C0082F00000200C0C008 /* CLAuthorizationStatus+StatusText.swift */; };
 		6EF24C1F2B21D4430047C1A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6EFD708B2B21C3D500143963 /* Localizable.strings */; };
 		6EFD70842B21BFB600143963 /* TermiWatchWidget.watchface in Resources */ = {isa = PBXBuildFile; fileRef = 6EFD70832B21BFB600143963 /* TermiWatchWidget.watchface */; };
 		6EFD70882B21C3D500143963 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6EFD708B2B21C3D500143963 /* Localizable.strings */; };
@@ -348,6 +374,20 @@
 		6E7DD6592AD952B6003E0C77 /* TermiWatchWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TermiWatchWidgetExtension.entitlements; sourceTree = "<group>"; };
 		6E89102F2CF58C7F00990085 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		6EAA2BB52AF0C24600368E8D /* JieQi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JieQi.swift; sourceTree = "<group>"; };
+		6EC0A0012F00000100C0A001 /* TermiFaceLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermiFaceLine.swift; sourceTree = "<group>"; };
+		6EC0A0022F00000100C0A002 /* TermiFaceTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermiFaceTheme.swift; sourceTree = "<group>"; };
+		6EC0A0032F00000100C0A003 /* TermiFaceAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermiFaceAnimation.swift; sourceTree = "<group>"; };
+		6EC0A0042F00000100C0A004 /* WatchFaceConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchFaceConfiguration.swift; sourceTree = "<group>"; };
+		6EC0A0052F00000100C0A005 /* FaceSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceSettingsStore.swift; sourceTree = "<group>"; };
+		6EC0A0062F00000100C0A006 /* WatchSyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncPayload.swift; sourceTree = "<group>"; };
+		6EC0C0012F00000200C0C001 /* WatchPreviewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPreviewLayout.swift; sourceTree = "<group>"; };
+		6EC0C0022F00000200C0C002 /* ThemePickerStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerStrip.swift; sourceTree = "<group>"; };
+		6EC0C0032F00000200C0C003 /* AnimationPickerDropdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPickerDropdown.swift; sourceTree = "<group>"; };
+		6EC0C0042F00000200C0C004 /* SyncToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncToastView.swift; sourceTree = "<group>"; };
+		6EC0C0052F00000200C0C005 /* WatchFacePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchFacePreview.swift; sourceTree = "<group>"; };
+		6EC0C0062F00000200C0C006 /* FaceLineEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceLineEditorView.swift; sourceTree = "<group>"; };
+		6EC0C0072F00000200C0C007 /* StatusPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPanelView.swift; sourceTree = "<group>"; };
+		6EC0C0082F00000200C0C008 /* CLAuthorizationStatus+StatusText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLAuthorizationStatus+StatusText.swift"; sourceTree = "<group>"; };
 		6EFD70832B21BFB600143963 /* TermiWatchWidget.watchface */ = {isa = PBXFileReference; lastKnownFileType = file; path = TermiWatchWidget.watchface; sourceTree = "<group>"; };
 		6EFD708A2B21C3D500143963 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		6EFD708C2B21C3D600143963 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -607,7 +647,9 @@
 				6EFD70832B21BFB600143963 /* TermiWatchWidget.watchface */,
 				6E7DAB472DBF9BAC009AE728 /* QWatchSessionManager.swift */,
 				6E7DAB432DBF9BA0009AE728 /* QShareFileManager.swift */,
-				6E2CC4252AEBCB0B002E58D5 /* QConfiguration.swift */,
+				6EC0A0102F00000100C0A010 /* Configuration */,
+				6EC0C0102F00000200C0C010 /* App */,
+				6EC0C0122F00000200C0C012 /* Extensions */,
 				6E6936F12AEA19F6006085E1 /* TWExtension.swift */,
 				6EAA2BB52AF0C24600368E8D /* JieQi.swift */,
 				6E6936082AE93E44006085E1 /* SVGView */,
@@ -665,6 +707,50 @@
 				6E7DD6412AD5554E003E0C77 /* Info.plist */,
 			);
 			path = TermiWatchWidget_Widget;
+			sourceTree = "<group>";
+		};
+		6EC0A0102F00000100C0A010 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				6E2CC4252AEBCB0B002E58D5 /* QConfiguration.swift */,
+				6EC0A0012F00000100C0A001 /* TermiFaceLine.swift */,
+				6EC0A0022F00000100C0A002 /* TermiFaceTheme.swift */,
+				6EC0A0032F00000100C0A003 /* TermiFaceAnimation.swift */,
+				6EC0A0042F00000100C0A004 /* WatchFaceConfiguration.swift */,
+				6EC0A0052F00000100C0A005 /* FaceSettingsStore.swift */,
+				6EC0A0062F00000100C0A006 /* WatchSyncPayload.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		6EC0C0102F00000200C0C010 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				6EC0C0112F00000200C0C011 /* Components */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		6EC0C0112F00000200C0C011 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				6EC0C0062F00000200C0C006 /* FaceLineEditorView.swift */,
+				6EC0C0052F00000200C0C005 /* WatchFacePreview.swift */,
+				6EC0C0072F00000200C0C007 /* StatusPanelView.swift */,
+				6EC0C0042F00000200C0C004 /* SyncToastView.swift */,
+				6EC0C0032F00000200C0C003 /* AnimationPickerDropdown.swift */,
+				6EC0C0022F00000200C0C002 /* ThemePickerStrip.swift */,
+				6EC0C0012F00000200C0C001 /* WatchPreviewLayout.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		6EC0C0122F00000200C0C012 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				6EC0C0082F00000200C0C008 /* CLAuthorizationStatus+StatusText.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -882,6 +968,20 @@
 				6E6936972AE93E45006085E1 /* SVGView.swift in Sources */,
 				6E6936672AE93E45006085E1 /* SVGSettings.swift in Sources */,
 				6E2CC4262AEBCB0B002E58D5 /* QConfiguration.swift in Sources */,
+				6EC0D0012F00000200C0D001 /* WatchPreviewLayout.swift in Sources */,
+				6EC0D0022F00000200C0D002 /* ThemePickerStrip.swift in Sources */,
+				6EC0D0032F00000200C0D003 /* AnimationPickerDropdown.swift in Sources */,
+				6EC0D0042F00000200C0D004 /* SyncToastView.swift in Sources */,
+				6EC0D0052F00000200C0D005 /* WatchFacePreview.swift in Sources */,
+				6EC0D0062F00000200C0D006 /* FaceLineEditorView.swift in Sources */,
+				6EC0D0072F00000200C0D007 /* StatusPanelView.swift in Sources */,
+				6EC0D0082F00000200C0D008 /* CLAuthorizationStatus+StatusText.swift in Sources */,
+				6EC0B0012F00000100C0B001 /* TermiFaceLine.swift in Sources */,
+				6EC0B0042F00000100C0B004 /* TermiFaceTheme.swift in Sources */,
+				6EC0B0072F00000100C0B007 /* TermiFaceAnimation.swift in Sources */,
+				6EC0B00A2F00000100C0B00A /* WatchFaceConfiguration.swift in Sources */,
+				6EC0B00D2F00000100C0B00D /* FaceSettingsStore.swift in Sources */,
+				6EC0B0102F00000100C0B010 /* WatchSyncPayload.swift in Sources */,
 				6E6936702AE93E45006085E1 /* SVGPathReader.swift in Sources */,
 				6E6936B52AE93E45006085E1 /* SVGGroup.swift in Sources */,
 				6E6936762AE93E45006085E1 /* SVGConstants.swift in Sources */,
@@ -953,6 +1053,12 @@
 				6E6936982AE93E45006085E1 /* SVGView.swift in Sources */,
 				6E6936682AE93E45006085E1 /* SVGSettings.swift in Sources */,
 				6E2CC4272AEBCB13002E58D5 /* QConfiguration.swift in Sources */,
+				6EC0B0022F00000100C0B002 /* TermiFaceLine.swift in Sources */,
+				6EC0B0052F00000100C0B005 /* TermiFaceTheme.swift in Sources */,
+				6EC0B0082F00000100C0B008 /* TermiFaceAnimation.swift in Sources */,
+				6EC0B00B2F00000100C0B00B /* WatchFaceConfiguration.swift in Sources */,
+				6EC0B00E2F00000100C0B00E /* FaceSettingsStore.swift in Sources */,
+				6EC0B0112F00000100C0B011 /* WatchSyncPayload.swift in Sources */,
 				6E6936712AE93E45006085E1 /* SVGPathReader.swift in Sources */,
 				6E6936B62AE93E45006085E1 /* SVGGroup.swift in Sources */,
 				6E6936772AE93E45006085E1 /* SVGConstants.swift in Sources */,
@@ -1037,6 +1143,12 @@
 				6E6936932AE93E45006085E1 /* SVGParserBasics.swift in Sources */,
 				6E6936C92AE93E45006085E1 /* SVGLine.swift in Sources */,
 				6E2CC4282AEBCB14002E58D5 /* QConfiguration.swift in Sources */,
+				6EC0B0032F00000100C0B003 /* TermiFaceLine.swift in Sources */,
+				6EC0B0062F00000100C0B006 /* TermiFaceTheme.swift in Sources */,
+				6EC0B0092F00000100C0B009 /* TermiFaceAnimation.swift in Sources */,
+				6EC0B00C2F00000100C0B00C /* WatchFaceConfiguration.swift in Sources */,
+				6EC0B00F2F00000100C0B00F /* FaceSettingsStore.swift in Sources */,
+				6EC0B0122F00000100C0B012 /* WatchSyncPayload.swift in Sources */,
 				6E7DD64A2AD5604A003E0C77 /* WeatherUtils.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

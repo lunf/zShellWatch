@@ -107,6 +107,9 @@ private final class QTermiDataService {
 class QTermiViewModel {
     var health = HealthInfo()
     var weather = WeatherViewInfo()
+    var snapshot: FaceDataSnapshot {
+        FaceDataSnapshot(weather: weather, health: health)
+    }
 
     private let dataService = QTermiDataService()
     private var isUpdating = false
@@ -134,6 +137,9 @@ class QTermiViewModel {
 final class QTermiViewModel: ObservableObject {
     @Published var health = HealthInfo()
     @Published var weather = WeatherViewInfo()
+    var snapshot: FaceDataSnapshot {
+        FaceDataSnapshot(weather: weather, health: health)
+    }
 
     private let dataService = QTermiDataService()
     private var isUpdating = false
