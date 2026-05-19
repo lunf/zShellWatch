@@ -4,5 +4,9 @@
 <dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>zShellWatch reads activity, steps, calories, heart rate, and related Health data to display terminal-style health lines on the watch face and widgets.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>zShellWatch does not modify your Health data. HealthKit access is used to keep terminal-style health lines and widgets current.</string>
 </dict>
 </plist>
