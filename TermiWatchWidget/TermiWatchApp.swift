@@ -244,6 +244,15 @@ struct MainScreen: View {
         updateStatus()
     }
 
+    func saveFaceSettings(syncToWatch: Bool = true) {
+        settingsStore.saveConfiguration(currentConfiguration)
+        if syncToWatch {
+            session.syncSettingsToWatch()
+        }
+
+        updateStatus()
+    }
+
     func refreshAfterFirstFrame() {
         guard didRunInitialRefresh else {
             didRunInitialRefresh = true
@@ -266,12 +275,12 @@ struct MainScreen: View {
 
     func saveThemeSelection(_ theme: TermiFaceTheme) {
         faceTheme = theme
-        refreshWidgets()
+        saveFaceSettings()
     }
 
     func saveAnimationSelection(_ animation: TermiFaceAnimation) {
         faceAnimation = animation
-        refreshWidgets()
+        saveFaceSettings()
     }
 
     func savePromptIdentity() {
