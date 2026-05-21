@@ -11,6 +11,19 @@ Important limitation: `zShellWatch` is not an Apple system watch face and does n
 
 ## Features
 
+### Sample Watch Face Themes
+
+<table border="0">
+ <tr>
+    <td><b style="font-size:14px">Cloud</b></td>
+    <td><b style="font-size:14px">Colorful</b></td>
+ </tr>
+ <tr>
+    <td><img src="Preview/face-01.png" width="120"></td>
+    <td><img src="Preview/face-02.png" width="120"></td>
+ </tr>
+</table>
+
 ### Quick Preview
 
 <img src="Preview/quick-preview.gif" width="480" alt="Quick preview">
