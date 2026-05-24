@@ -9,6 +9,8 @@ This project is inspired by:
 
 Important limitation: `zShellWatch` is not an Apple system watch face and does not replace the default watch face. It renders a watch-face-like screen inside the watchOS app, so the face is visible while the watch app is open.
 
+You can download in [App Store](https://apps.apple.com/app/zshellwatch/id6770774873)
+
 ## Features
 
 ### Sample Watch Face Themes
