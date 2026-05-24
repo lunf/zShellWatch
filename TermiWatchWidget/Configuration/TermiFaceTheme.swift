@@ -12,6 +12,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
     case cloud
     case icon
     case colorful
+    case binary
 
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return "Cloud Theme"
         case .icon: return "Icon Theme"
         case .colorful: return "Colorful Theme"
+        case .binary: return "Binary Theme"
         }
     }
 
@@ -32,6 +34,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return "cloud.sun"
         case .icon: return "app.badge"
         case .colorful: return "paintpalette"
+        case .binary: return "circle.grid.3x3.fill"
         }
     }
 
@@ -39,7 +42,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .default, .git, .cloud: return "SFMono-Light"
         case .icon: return "SFMono-Regular"
-        case .colorful: return "SFMono-Medium"
+        case .colorful, .binary: return "SFMono-Medium"
         }
     }
 
@@ -48,6 +51,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .default, .cloud, .colorful: return qFontSize
         case .git: return qFontSize - 0.5
         case .icon: return qFontSize + 0.5
+        case .binary: return qFontSize
         }
     }
 
@@ -57,6 +61,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .git: return Color(r: 216, g: 255, b: 216)
         case .cloud: return Color(r: 226, g: 244, b: 255)
         case .colorful: return Color(r: 255, g: 246, b: 214)
+        case .binary: return Color(r: 232, g: 255, b: 238)
         }
     }
 
@@ -67,6 +72,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 168, g: 221, b: 255)
         case .icon: return Color(r: 225, g: 225, b: 225)
         case .colorful: return Color(r: 255, g: 223, b: 106)
+        case .binary: return Color(r: 232, g: 255, b: 238)
         }
     }
 
@@ -77,6 +83,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 135, g: 206, b: 250)
         case .icon: return Color(r: 190, g: 190, b: 190)
         case .colorful: return Color(r: 255, g: 126, b: 182)
+        case .binary: return Color(r: 125, g: 220, b: 150)
         }
     }
 
@@ -87,6 +94,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 72, g: 185, b: 255)
         case .icon: return Color(r: 160, g: 160, b: 160)
         case .colorful: return Color(r: 255, g: 180, b: 60)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -97,6 +105,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 185, g: 229, b: 255)
         case .icon: return Color(r: 220, g: 220, b: 220)
         case .colorful: return Color(r: 255, g: 214, b: 102)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -107,6 +116,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 99, g: 199, b: 255)
         case .icon: return Color(r: 244, g: 244, b: 244)
         case .colorful: return Color(r: 255, g: 218, b: 69)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -117,6 +127,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 119, g: 228, b: 255)
         case .icon: return Color(r: 255, g: 255, b: 255)
         case .colorful: return Color(r: 255, g: 117, b: 74)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -127,6 +138,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 64, g: 179, b: 255)
         case .icon: return Color(r: 205, g: 205, b: 205)
         case .colorful: return Color(r: 40, g: 192, b: 255)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -137,6 +149,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 102, g: 221, b: 255)
         case .icon: return Color(r: 235, g: 235, b: 235)
         case .colorful: return Color(r: 0, g: 210, b: 255)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -147,6 +160,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 176, g: 219, b: 255)
         case .icon: return Color(r: 176, g: 176, b: 176)
         case .colorful: return Color(r: 187, g: 132, b: 255)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -157,6 +171,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 84, g: 177, b: 255)
         case .icon: return Color(r: 230, g: 230, b: 230)
         case .colorful: return Color(r: 118, g: 117, b: 255)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -167,6 +182,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 255, g: 199, b: 102)
         case .icon: return Color(r: 220, g: 220, b: 220)
         case .colorful: return Color(r: 255, g: 91, b: 73)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 
@@ -177,6 +193,7 @@ enum TermiFaceTheme: String, CaseIterable, Identifiable, Codable {
         case .cloud: return Color(r: 255, g: 140, b: 180)
         case .icon: return Color(r: 245, g: 245, b: 245)
         case .colorful: return Color(r: 255, g: 75, b: 132)
+        case .binary: return Color(r: 0, g: 255, b: 128)
         }
     }
 }

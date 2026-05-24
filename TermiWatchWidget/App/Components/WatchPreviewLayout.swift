@@ -16,6 +16,10 @@ let watchPreviewContentInset: CGFloat = 8
 let themePickerTopInset: CGFloat = 8
 
 func watchPreviewHeight(lines: [TermiFaceLine], theme: TermiFaceTheme) -> CGFloat {
+    if theme == .binary {
+        return 240
+    }
+
     let visibleLineWeight = max(lines.reduce(CGFloat(0)) { $0 + termiFaceLineHeightWeight($1, theme: theme) }, 1)
     let rowHeight = qRowHeight + 0.5
     let rowSpacing = CGFloat(max(lines.count - 1, 0)) * qFaceRowSpacing
