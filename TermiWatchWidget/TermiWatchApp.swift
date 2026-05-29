@@ -6,12 +6,6 @@
 //
 
 import SwiftUI
-import WidgetKit
-import CoreLocation
-import WatchConnectivity
-import OSLog
-
-private let termiWatchLogger = Logger(subsystem: "com.github.lunf.zShellWatch", category: "App")
 
 @main
 struct TermiWatch: App {
@@ -29,66 +23,44 @@ struct TermiWatch: App {
 struct MainScreen: View {
     @Environment(\.scenePhase) private var scenePhase
     let viewModel: QTermiViewModel
-    let session: WatchSessionManager
-    let settingsStore: FaceSettingsStore
-    private var userdefaults: UserDefaults? { settingsStore.userDefaults }
-    @State private var errorMessage = ""
-    @State private var isShowingError = false
-    @State private var syncStatusMessage = ""
-    @State private var isShowingSyncToast = false
-    @State private var locationStatus = "Checking"
-    @State private var healthStatus = "Checking"
-    @State private var watchStatus = "Checking"
-    @State private var syncStatusTitle = "Not Synced"
-    @State private var syncStatusDetail = "Tap export to send the current face."
-    @State private var lastSyncDate: Date?
-    @State private var isShowingStatusPanel = false
-    @State private var isShowingFaceLineEditor = false
-    @State private var faceLines = selectedFaceLines()
-    @State private var faceTheme = selectedFaceTheme()
-    @State private var faceAnimation = selectedFaceAnimation()
-    @State private var didRunInitialRefresh = false
-    @State var userName = terminalName()
-    @State var hostName = machineName()
+    @State private var screenModel: MainScreenViewModel
 
     init(viewModel: QTermiViewModel, session: WatchSessionManager, settingsStore: FaceSettingsStore) {
         self.viewModel = viewModel
-        self.session = session
-        self.settingsStore = settingsStore
-
-        let configuration = settingsStore.loadConfiguration()
-        _faceLines = State(initialValue: configuration.lines)
-        _faceTheme = State(initialValue: configuration.theme)
-        _faceAnimation = State(initialValue: configuration.animation)
-        _userName = State(initialValue: configuration.terminalUser)
-        _hostName = State(initialValue: configuration.machineName)
+        _screenModel = State(initialValue: MainScreenViewModel(
+            faceDataViewModel: viewModel,
+            session: session,
+            settingsStore: settingsStore
+        ))
     }
 
     var body: some View {
+        @Bindable var screenModel = screenModel
+
         NavigationStack {
                 GeometryReader { proxy in
                     let previewWidth = min(watchPreviewWidth, max(0, proxy.size.width - 32))
-                    let previewHeight = watchPreviewHeight(lines: faceLines, theme: faceTheme)
-                    let reservedPreviewHeight = watchPreviewReservedHeight(lines: faceLines)
+                    let previewHeight = watchPreviewHeight(lines: screenModel.faceLines, theme: screenModel.faceTheme)
+                    let reservedPreviewHeight = watchPreviewReservedHeight(lines: screenModel.faceLines)
 
                     ScrollView {
                         VStack(spacing: 0) {
                             Color.clear.frame(height: watchPreviewControlGap)
 
-                            WatchFacePreview(viewModel: viewModel, configuration: currentConfiguration)
+                            WatchFacePreview(viewModel: viewModel, configuration: screenModel.currentConfiguration)
                                 .frame(width: previewWidth, height: previewHeight, alignment: .top)
                                 .clipShape(RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous))
                                 .overlay {
                                     RoundedRectangle(cornerRadius: watchPreviewCornerRadius, style: .continuous)
-                                        .stroke(faceTheme.accentColor, lineWidth: 1)
+                                        .stroke(screenModel.faceTheme.accentColor, lineWidth: 1)
                                 }
                                 .frame(height: reservedPreviewHeight, alignment: .top)
 
-                            ThemePickerStrip(selectedTheme: $faceTheme, onThemeChange: saveThemeSelection)
+                            ThemePickerStrip(selectedTheme: $screenModel.faceTheme, onThemeChange: screenModel.saveThemeSelection)
                                 .padding(.horizontal, 16)
                                 .padding(.top, watchPreviewControlGap + themePickerTopInset)
 
-                            AnimationPickerDropdown(selectedAnimation: $faceAnimation, onAnimationChange: saveAnimationSelection)
+                            AnimationPickerDropdown(selectedAnimation: $screenModel.faceAnimation, onAnimationChange: screenModel.saveAnimationSelection)
                                 .padding(.horizontal, 16)
                                 .padding(.top, 10)
                         }
@@ -104,36 +76,46 @@ struct MainScreen: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button {
-                            updateStatus()
-                            isShowingStatusPanel = true
+                            screenModel.updateStatus()
+                            screenModel.isShowingStatusPanel = true
                         } label: {
                             Image(systemName: "link.circle")
                         }
                         .accessibilityLabel(LocalizedStringKey("Connection Status"))
-                        .popover(isPresented: $isShowingStatusPanel) {
-                            statusPanel
+                        .popover(isPresented: $screenModel.isShowingStatusPanel) {
+                            StatusPanelView(
+                                locationStatus: screenModel.locationStatus,
+                                healthStatus: screenModel.healthStatus,
+                                watchStatus: screenModel.watchStatus,
+                                storageStatus: screenModel.storageStatus,
+                                storageDetail: screenModel.storageDetail,
+                                weatherSourceName: qWeatherSourceName,
+                                syncStatusTitle: screenModel.syncStatusTitle,
+                                syncStatusDetail: screenModel.syncStatusDetail,
+                                lastSyncText: screenModel.lastSyncText
+                            )
                                 .padding(16)
                                 .presentationCompactAdaptation(.popover)
                         }
                     }
                     ToolbarItem(placement: .primaryAction) {
                         Button {
-                            isShowingFaceLineEditor = true
+                            screenModel.isShowingFaceLineEditor = true
                         } label: {
                             Image(systemName: "gearshape")
                         }
                         .accessibilityLabel(LocalizedStringKey("Configure Lines"))
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button(action: syncWatchFace) {
+                        Button(action: screenModel.syncWatchFace) {
                             Image(systemName: "square.and.arrow.up")
                         }
                         .accessibilityLabel(LocalizedStringKey("Sync Watch Face"))
                     }
                 }
                 .overlay(alignment: .top) {
-                    if isShowingSyncToast {
-                        SyncToastView(title: syncStatusTitle, message: syncStatusMessage)
+                    if screenModel.isShowingSyncToast {
+                        SyncToastView(title: screenModel.syncStatusTitle, message: screenModel.syncStatusMessage)
                             .padding(.horizontal, 16)
                             .padding(.top, 12)
                             .transition(.move(edge: .top).combined(with: .opacity))
@@ -141,212 +123,25 @@ struct MainScreen: View {
                     }
                 }
             }
-            .alert(LocalizedStringKey("Error"), isPresented: $isShowingError) {
+            .alert(LocalizedStringKey("Error"), isPresented: $screenModel.isShowingError) {
                 Button(LocalizedStringKey("OK"), role: .cancel) {}
             } message: {
-                Text(errorMessage)
+                Text(screenModel.errorMessage)
             }
-            .sheet(isPresented: $isShowingFaceLineEditor) {
+            .sheet(isPresented: $screenModel.isShowingFaceLineEditor) {
                 FaceLineEditorView(
-                    terminalUser: $userName,
-                    machineName: $hostName,
-                    selectedLines: $faceLines,
-                    onPromptIdentityChange: savePromptIdentity,
-                    onLinesChange: saveFaceLineSelection
+                    terminalUser: $screenModel.userName,
+                    machineName: $screenModel.hostName,
+                    selectedLines: $screenModel.faceLines,
+                    onPromptIdentityChange: screenModel.savePromptIdentity,
+                    onLinesChange: screenModel.saveFaceLineSelection
                 )
                 .onDisappear {
-                    refreshWidgets()
+                    screenModel.refreshWidgets()
                 }
             }
-        // If this reports an error, set true to false to support iOS 17 and earlier.
-#if true
         .onChange(of: scenePhase, initial: true) {
-            switch scenePhase {
-            case .active:
-                termiWatchLogger.debug("Active")
-                refreshAfterFirstFrame()
-
-//                motionViewModel.startMotionUpdates()
-
-            case .inactive:
-                termiWatchLogger.debug("Inactive")
-            case .background:
-                termiWatchLogger.debug("Background")
-            @unknown default: break
-            }
-        }
-#else
-        .onChange(of: scenePhase) { phase in
-
-            if(phase == .active){
-                viewModel.updateModel()
-                updateStatus()
-            }
-        }
-#endif
-    }
-
-    var statusPanel: some View {
-        StatusPanelView(
-            locationStatus: locationStatus,
-            healthStatus: healthStatus,
-            watchStatus: watchStatus,
-            weatherSourceName: qWeatherSourceName,
-            syncStatusTitle: syncStatusTitle,
-            syncStatusDetail: syncStatusDetail,
-            lastSyncText: lastSyncText
-        )
-    }
-
-    var lastSyncText: String {
-        guard let lastSyncDate else { return "Never" }
-        return Self.syncDateFormatter.string(from: lastSyncDate)
-    }
-
-    var currentConfiguration: WatchFaceConfiguration {
-        WatchFaceConfiguration(
-            terminalUser: userName,
-            machineName: hostName,
-            lines: faceLines,
-            theme: faceTheme,
-            animation: faceAnimation
-        )
-    }
-
-    private static let syncDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .medium
-        return formatter
-    }()
-
-    func syncWatchFace() {
-        syncStatusTitle = "Sending"
-        syncStatusDetail = "Sending current face settings to Apple Watch..."
-        showSyncToast()
-        refreshWidgets(syncToWatch: false)
-        session.syncSettingsToWatch { result in
-            applySyncResult(result)
-            showSyncToast()
+            screenModel.handleScenePhase(scenePhase)
         }
     }
-
-    func refreshWidgets(syncToWatch: Bool = true) {
-        settingsStore.saveConfiguration(currentConfiguration)
-        if syncToWatch {
-            session.syncSettingsToWatch()
-        }
-
-        viewModel.updateModel()
-        WidgetCenter.shared.reloadTimelines(ofKind: "HealthWidget")
-        WidgetCenter.shared.reloadTimelines(ofKind: "WeatherWidget")
-        WidgetCenter.shared.reloadTimelines(ofKind: "CircularWidget")
-        updateStatus()
-    }
-
-    func saveFaceSettings(syncToWatch: Bool = true) {
-        settingsStore.saveConfiguration(currentConfiguration)
-        if syncToWatch {
-            session.syncSettingsToWatch()
-        }
-
-        updateStatus()
-    }
-
-    func refreshAfterFirstFrame() {
-        guard didRunInitialRefresh else {
-            didRunInitialRefresh = true
-            Task { @MainActor in
-                await Task.yield()
-                viewModel.updateModel()
-                updateStatus()
-            }
-            return
-        }
-
-        viewModel.updateModel()
-        updateStatus()
-    }
-
-    func saveFaceLineSelection(_ lines: [TermiFaceLine]) {
-        faceLines = lines
-        refreshWidgets()
-    }
-
-    func saveThemeSelection(_ theme: TermiFaceTheme) {
-        faceTheme = theme
-        saveFaceSettings()
-    }
-
-    func saveAnimationSelection(_ animation: TermiFaceAnimation) {
-        faceAnimation = animation
-        saveFaceSettings()
-    }
-
-    func savePromptIdentity() {
-        refreshWidgets()
-    }
-
-    func updateStatus() {
-        let locationAuthorization = CLLocationManager().authorizationStatus
-        locationStatus = locationAuthorization.statusText
-
-        healthStatus = qUseHealthKit ? "Available" : "Disabled"
-
-        guard WCSession.isSupported() else {
-            watchStatus = "Unsupported"
-            return
-        }
-
-        switch WCSession.default.activationState {
-        case .activated:
-            watchStatus = WCSession.default.isReachable ? "Reachable" : "Paired"
-        case .inactive:
-            watchStatus = "Inactive"
-        case .notActivated:
-            watchStatus = "Not Activated"
-        @unknown default:
-            watchStatus = "Unknown"
-        }
-    }
-
-    func applySyncResult(_ result: WatchSettingsSyncResult) {
-        switch result {
-        case .delivered(let date):
-            syncStatusTitle = "Sent to Watch"
-            syncStatusDetail = "Apple Watch acknowledged the update. Keep zShellWatch open on the watch to see it immediately."
-            lastSyncDate = date
-        case .saved(let date, let reason):
-            syncStatusTitle = "Saved for Watch"
-            syncStatusDetail = reason
-            lastSyncDate = date
-        case .failed(let date, let reason):
-            syncStatusTitle = "Sync Failed"
-            syncStatusDetail = reason
-            lastSyncDate = date
-        }
-    }
-
-    func showSyncToast() {
-        syncStatusMessage = syncStatusDetail
-        withAnimation(.easeOut(duration: 0.2)) {
-            isShowingSyncToast = true
-        }
-
-        let currentMessage = syncStatusMessage
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            guard currentMessage == syncStatusMessage else { return }
-            withAnimation(.easeIn(duration: 0.2)) {
-                isShowingSyncToast = false
-            }
-        }
-    }
-
-    func showError(_ message: String) {
-        DispatchQueue.main.async {
-            errorMessage = message
-            isShowingError = true
-        }
-    }
-
 }

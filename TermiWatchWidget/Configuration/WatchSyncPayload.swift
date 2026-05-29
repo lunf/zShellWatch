@@ -22,43 +22,11 @@ struct WatchSyncPayload: Codable, Equatable {
         self.init(command: .syncSettings, configuration: settingsStore.loadConfiguration())
     }
 
-    init?(message: [String: Any]) {
-        guard let rawCommand = message[qWatchSessionSyncCommandKey] as? String,
-              let command = WatchSyncCommand(rawValue: rawCommand) else {
-            return nil
-        }
-
-        self.command = command
-
-        if command == .syncSettings {
-            let lines = availableFaceLines(
-                from: (message[qFaceLineOrderKey] as? [String])?.compactMap(TermiFaceLine.init(rawValue:)) ?? selectedFaceLines()
-            )
-            let theme = (message[qFaceThemeKey] as? String).flatMap(TermiFaceTheme.init(rawValue:)) ?? selectedFaceTheme()
-            let animation = (message[qFaceAnimationKey] as? String).flatMap(TermiFaceAnimation.init(rawValue:)) ?? selectedFaceAnimation()
-            configuration = WatchFaceConfiguration(
-                terminalUser: message[qUserNameKey] as? String ?? terminalName(),
-                machineName: message[qMachineNameKey] as? String ?? machineName(),
-                lines: lines,
-                theme: theme,
-                animation: animation
-            )
-        }
+    init(data: Data, decoder: JSONDecoder = JSONDecoder()) throws {
+        self = try decoder.decode(Self.self, from: data)
     }
 
-    var message: [String: Any] {
-        var message: [String: Any] = [qWatchSessionSyncCommandKey: command.rawValue]
-
-        guard let configuration else {
-            return message
-        }
-
-        message[qUserNameKey] = configuration.terminalUser
-        message[qMachineNameKey] = configuration.machineName
-        message[qFaceLineOrderKey] = configuration.lines.map(\.rawValue)
-        message[qFaceThemeKey] = configuration.theme.rawValue
-        message[qFaceAnimationKey] = configuration.animation.rawValue
-
-        return message
+    func encodedData(encoder: JSONEncoder = JSONEncoder()) throws -> Data {
+        try encoder.encode(self)
     }
 }

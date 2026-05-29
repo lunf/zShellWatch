@@ -85,20 +85,50 @@ class HealthObserver {
         }
     }
     private var didRequestAuthorization = false
+    private var isRequestingAuthorization = false
+    private var authorizationCompletions: [(Bool) -> Void] = []
 
     init() {
         self.healthStore = HKHealthStore()
         lastHRV = userdefaults?.integer(forKey: "lastHRV") ?? 0
     }
 
-    func requestAuthorizationIfNeeded() {
-        guard qUseHealthKit, !didRequestAuthorization else {
+    func requestAuthorizationIfNeeded(completion: @escaping (Bool) -> Void) {
+        guard qUseHealthKit else {
+            completion(false)
             return
         }
 
-        didRequestAuthorization = true
-        healthStore.requestAuthorization(toShare: nil, read: hkDataTypesOfInterest) { result,error in
+        guard HKHealthStore.isHealthDataAvailable() else {
+            completion(false)
+            return
+        }
+
+        if didRequestAuthorization {
+            completion(true)
+            return
+        }
+
+        authorizationCompletions.append(completion)
+
+        guard !isRequestingAuthorization else {
+            return
+        }
+
+        isRequestingAuthorization = true
+        healthStore.requestAuthorization(toShare: nil, read: hkDataTypesOfInterest) { [weak self] result, error in
             healthLogger.info("Health authorization result: \(result.description, privacy: .public) \(error?.localizedDescription ?? "", privacy: .public)")
+
+            guard let self else { return }
+
+            let completions = self.authorizationCompletions
+            self.authorizationCompletions.removeAll()
+            self.didRequestAuthorization = result
+            self.isRequestingAuthorization = false
+
+            completions.forEach { completion in
+                completion(result)
+            }
         }
     }
 
@@ -247,8 +277,17 @@ extension HealthObserver {
             return
         }
 
-        requestAuthorizationIfNeeded()
+        requestAuthorizationIfNeeded { [weak self] isAuthorized in
+            guard isAuthorized, let self else {
+                completion(HealthInfo())
+                return
+            }
 
+            self.fetchAuthorizedHealthInfo(completion: completion)
+        }
+    }
+
+    private func fetchAuthorizedHealthInfo(completion: @escaping (HealthInfo) -> ()) {
         var health = HealthInfo(steps: -1, excercise: -1, excerciseTime: -1, standHours: -1, heartRate: -1, hrv: HealthHRV())
         let group = DispatchGroup()
         let stateQueue = DispatchQueue(label: "HealthObserver.healthInfo.state")

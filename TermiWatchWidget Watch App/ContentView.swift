@@ -16,7 +16,7 @@ struct ContentView: View {
     @State private var storedTheme = selectedFaceTheme()
     @State private var storedAnimation = selectedFaceAnimation()
     @State private var storedConfiguration = FaceSettingsStore().loadConfiguration()
-    private let renderer = TerminalWatchFaceRenderer()
+    private let renderer = SelectedWatchFaceRenderer()
 
     init(viewModel: QTermiViewModel, faceLines: [TermiFaceLine]? = nil, theme: TermiFaceTheme? = nil, animation: TermiFaceAnimation? = nil) {
         self.viewModel = viewModel

@@ -38,3 +38,26 @@ struct TerminalWatchFaceRenderer: WatchFaceRendering {
         )
     }
 }
+
+struct BinaryWatchFaceRenderer: WatchFaceRendering {
+    func render(_ request: WatchFaceRenderRequest) -> some View {
+        TimelineView(.periodic(from: Date(), by: 1)) { timeline in
+            BinaryWatchFaceView(date: timeline.date, theme: request.configuration.theme)
+        }
+    }
+}
+
+struct SelectedWatchFaceRenderer: WatchFaceRendering {
+    private let terminalRenderer = TerminalWatchFaceRenderer()
+    private let binaryRenderer = BinaryWatchFaceRenderer()
+
+    @ViewBuilder
+    func render(_ request: WatchFaceRenderRequest) -> some View {
+        switch request.configuration.theme {
+        case .binary:
+            binaryRenderer.render(request)
+        case .default, .git, .cloud, .icon, .colorful:
+            terminalRenderer.render(request)
+        }
+    }
+}

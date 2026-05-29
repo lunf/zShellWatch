@@ -19,10 +19,12 @@ You can download in [App Store](https://apps.apple.com/app/zshellwatch/id6770774
  <tr>
     <td><b style="font-size:14px">Cloud</b></td>
     <td><b style="font-size:14px">Colorful</b></td>
+    <td><b style="font-size:14px">Binary</b></td>
  </tr>
  <tr>
-    <td><img src="Preview/face-01.png" width="120"></td>
-    <td><img src="Preview/face-02.png" width="120"></td>
+    <td><img src="Preview/face-01.avif" width="320"></td>
+    <td><img src="Preview/face-02.avif" width="320"></td>
+    <td><img src="Preview/face-03.avif" width="320"></td>
  </tr>
 </table>
 
@@ -39,15 +41,6 @@ You can download in [App Store](https://apps.apple.com/app/zshellwatch/id6770774
 - Status panel for Location, Health, Watch pairing, Weather source, and last sync state.
 - Terminal user and machine name configuration.
 - Shared settings storage through App Groups.
-
-### Watch face preview and watch app
-
-- Terminal prompt layout similar to `user@machine:~ $`.
-- Configurable command prompt line.
-- Status-bar-like current time in the iPhone preview so the preview resembles the real watch app.
-- Apple Watch-shaped rounded preview border.
-- Dynamic preview height based on visible face lines.
-- Watch app receives the configured face from the iPhone app and displays only that synced face.
 
 ### Configurable face lines
 
@@ -95,28 +88,6 @@ The top status area can show a selectable animation:
 
 Animations are intentionally small and status-bar sized so they do not cover the watch face content.
 
-### Sync
-
-The iPhone app syncs the selected face configuration to Apple Watch using WatchConnectivity. Sync includes:
-
-- Visible face lines and order.
-- Selected theme.
-- Selected animation.
-- Terminal user.
-- Machine name.
-
-The app shows lightweight sync feedback so it is easier to tell whether the watch received the latest configuration.
-
-### Health
-
-HealthKit support is used for activity and health-related face lines, including rings, steps, calories, and heart rate. Health data requires user permission on device.
-
-HealthKit can be controlled from:
-
-```swift
-let qUseHealthKit = true
-```
-
 ### Weather
 
 Weather support is optional. If no provider is configured, the weather feature is disabled and weather face lines are hidden.
@@ -135,24 +106,6 @@ let HFWeatherKey = ""
 ```
 
 Personal Apple development teams may not support the WeatherKit capability. In that case, keep WeatherKit disabled and use QWeather only if you have a key.
-
-### Widgets
-
-The project includes widget targets for terminal-style weather and health information. Weather widgets follow the same provider rule as the main app: if no weather provider is configured, weather data is skipped.
-
-### SVG weather icons
-
-The `SVGView` code is used to render bundled weather SVG icons from `HFBundle.bundle` for QWeather conditions. It is not a general user-facing SVG image feature.
-
-## Requirements
-
-- Xcode.
-- iOS app target.
-- watchOS app target.
-- Paired Apple Watch or iOS/watchOS simulators.
-- App Groups capability for shared settings.
-- HealthKit capability if health lines are enabled.
-- Optional QWeather key or WeatherKit capability for weather lines.
 
 ## Setup
 
@@ -181,15 +134,6 @@ let qUseWeatherKit = true
 7. Build and run the iOS app on a paired iPhone or simulator.
 8. Install the watch app on Apple Watch.
 9. Use the iPhone app to configure the face, then tap the sync action in the navigation bar.
-
-## Project Structure
-
-- [TermiWatchWidget/TermiWatchApp.swift](TermiWatchWidget/TermiWatchApp.swift): main iPhone app screen.
-- [TermiWatchWidget/App/Components](TermiWatchWidget/App/Components): iPhone UI components such as the preview, theme picker, animation picker, sync toast, status panel, and face line editor.
-- [TermiWatchWidget/Configuration](TermiWatchWidget/Configuration): shared face configuration, themes, animations, line definitions, sync payload, and settings storage.
-- [TermiWatchWidget Watch App](TermiWatchWidget%20Watch%20App): watchOS app and watch face rendering.
-- [TermiWatchWidget_Widget](TermiWatchWidget_Widget): widget extension, weather utilities, and health observer.
-- [TermiWatchWidget/SVGView](TermiWatchWidget/SVGView): SVG rendering support for bundled weather icons.
 
 ## Known Limitations
 

@@ -137,7 +137,7 @@ func getWeather(location: CLLocation, afterHours: Int) async throws -> WeatherIn
             alerts.append("")
         }
 
-        result = WeatherInfo(current: current, weathers: afters, alerts: alerts)
+        result = WeatherInfo(current: current, weathers: [current] + afters, alerts: alerts)
 
     }catch {
 
@@ -330,6 +330,7 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
 
     var locationManager: CLLocationManager?
     private var handlers: [(CLLocation) -> Void] = []
+    private var isWaitingForAuthorization = false
 
 //    var lastLati = UserDefaults.standard.object(forKey: "LastLocation.lati") ?? 0
 //    var lastLong = UserDefaults.standard.object(forKey: "LastLocation.long") ?? 0
@@ -337,19 +338,37 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
 
     override init() {
         super.init()
-        DispatchQueue.main.async {
-            self.locationManager = CLLocationManager()
-            self.locationManager!.delegate = self
-
-            let status = self.locationManager!.authorizationStatus
-            weatherLogger.debug("Location status: \(String(describing: status), privacy: .public)")
-            if status == .notDetermined {
-                self.locationManager!.requestWhenInUseAuthorization()
+        if Thread.isMainThread {
+            configureLocationManager()
+        } else {
+            DispatchQueue.main.sync {
+                configureLocationManager()
             }
         }
     }
 
     func fetchLocation(handler: @escaping (CLLocation) -> Void) {
+        DispatchQueue.main.async {
+            self.fetchLocationOnMain(handler: handler)
+        }
+    }
+
+    private func configureLocationManager() {
+        guard locationManager == nil else { return }
+
+        let locationManager = CLLocationManager()
+        locationManager.delegate = self
+        self.locationManager = locationManager
+
+        let status = locationManager.authorizationStatus
+        weatherLogger.debug("Location status: \(String(describing: status), privacy: .public)")
+        if status == .notDetermined {
+            isWaitingForAuthorization = true
+            locationManager.requestWhenInUseAuthorization()
+        }
+    }
+
+    private func fetchLocationOnMain(handler: @escaping (CLLocation) -> Void) {
         weatherLogger.debug("Cached location: \(self.lastLocation, privacy: .public), time: \(self.lastLocationTime, privacy: .public)")
 
         let now:Double = Date().timeIntervalSince1970
@@ -363,14 +382,56 @@ class WidgetLocationManager: NSObject, CLLocationManagerDelegate {
         }
 
         guard let locationManager else {
-            weatherLogger.error("Location manager is not ready; using cached location.")
-            handler(CLLocation(string: lastLocation))
+            configureLocationManager()
+            fetchLocationOnMain(handler: handler)
             return
         }
 
         handlers.append(handler)
+
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            isWaitingForAuthorization = true
+            locationManager.requestWhenInUseAuthorization()
+            weatherLogger.debug("Waiting for location authorization")
+            return
+        case .authorizedAlways, .authorizedWhenInUse:
+            break
+        case .denied, .restricted:
+            weatherLogger.error("Location authorization denied or restricted; using cached location.")
+            completeLocationRequests(with: CLLocation(string: lastLocation))
+            return
+        @unknown default:
+            weatherLogger.error("Unknown location authorization status; using cached location.")
+            completeLocationRequests(with: CLLocation(string: lastLocation))
+            return
+        }
+
         locationManager.requestLocation()
         weatherLogger.debug("Requested location")
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        weatherLogger.debug("Location authorization changed: \(String(describing: status), privacy: .public)")
+
+        guard isWaitingForAuthorization else { return }
+
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            isWaitingForAuthorization = false
+            guard !handlers.isEmpty else { return }
+            manager.requestLocation()
+            weatherLogger.debug("Requested location after authorization")
+        case .denied, .restricted:
+            isWaitingForAuthorization = false
+            completeLocationRequests(with: CLLocation(string: lastLocation))
+        case .notDetermined:
+            break
+        @unknown default:
+            isWaitingForAuthorization = false
+            completeLocationRequests(with: CLLocation(string: lastLocation))
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

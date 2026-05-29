@@ -18,7 +18,10 @@ extension FileManager{
     
     func makeShareFolderExists(folderName: String) -> URL? {
         let documentsDirectory = containerURL(forSecurityApplicationGroupIdentifier: qGroupBundleID)
-        guard let folderURL = documentsDirectory?.appendingPathComponent(folderName) else { return nil}
+        guard let folderURL = documentsDirectory?.appendingPathComponent(folderName) else {
+            shareFileLogger.error("App Group container unavailable for \(qGroupBundleID, privacy: .public); cannot create shared folder \(folderName, privacy: .public).")
+            return nil
+        }
         
         var isDir : ObjCBool = false
         var isExists = FileManager.default.fileExists(atPath: folderURL.path, isDirectory: &isDir)
@@ -27,6 +30,7 @@ extension FileManager{
                 try FileManager.default.removeItem(at: folderURL)
                 isExists = false;
             } catch {
+                shareFileLogger.error("Could not replace shared folder file at \(folderURL.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 return nil
             }
         }
@@ -34,6 +38,7 @@ extension FileManager{
             do {
                 try FileManager.default.createDirectory(atPath: folderURL.path, withIntermediateDirectories: true, attributes: nil)
             } catch {
+                shareFileLogger.error("Could not create shared folder at \(folderURL.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 return nil
             }
         }

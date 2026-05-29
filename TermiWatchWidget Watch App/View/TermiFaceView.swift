@@ -50,26 +50,20 @@ struct TermiFaceView: View {
     }
 
     var body: some View {
-        TimelineView(.periodic(from: Date(), by: theme == .binary ? 1 : 60)) { timeline in
+        TimelineView(.periodic(from: Date(), by: 60)) { timeline in
             let rowHeight = faceBaseRowHeight()
             let visibleLines = availableFaceLines(from: lines)
 
-            Group {
-                if theme == .binary {
-                    BinaryWatchFaceView(date: timeline.date, theme: theme)
-                } else {
-                    VStack(alignment: .leading, spacing: qFaceRowSpacing) {
-                        ForEach(visibleLines) { line in
-                            faceRow(line, date: timeline.date)
-                                .frame(height: rowHeight * termiFaceLineHeightWeight(line, theme: theme))
-                        }
-                    }
-                    .padding(.top, qFacePaddingTop)
-                    .padding(.horizontal, qFacePaddingHorizontal)
-                    .padding(.bottom, qFacePaddingBottom)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            VStack(alignment: .leading, spacing: qFaceRowSpacing) {
+                ForEach(visibleLines) { line in
+                    faceRow(line, date: timeline.date)
+                        .frame(height: rowHeight * termiFaceLineHeightWeight(line, theme: theme))
                 }
             }
+            .padding(.top, qFacePaddingTop)
+            .padding(.horizontal, qFacePaddingHorizontal)
+            .padding(.bottom, qFacePaddingBottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .environment(\.termiFaceTheme, theme)
 #if os(watchOS)
             .overlay(alignment: .topLeading) {

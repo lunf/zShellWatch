@@ -53,7 +53,18 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
             return
         }
 
-        let message = WatchSyncPayload(settingsStore: settingsStore).message
+        let payload: WatchSyncPayload
+        let payloadData: Data
+
+        do {
+            payload = WatchSyncPayload(settingsStore: settingsStore)
+            payloadData = try payload.encodedData()
+        } catch {
+            DispatchQueue.main.async {
+                completion?(.failed(Date(), reason: "Could not encode watch face settings. \(error.localizedDescription)"))
+            }
+            return
+        }
 
         let session = WCSession.default
 
@@ -80,31 +91,19 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         }
 #endif
 
-        let contextError = sendApplicationContext(message)
-
-        guard session.isReachable else {
+        do {
+            try updateApplicationContext(with: payloadData)
             DispatchQueue.main.async {
-                if let contextError {
-                    completion?(.failed(Date(), reason: contextError.localizedDescription))
+                if session.isReachable {
+                    completion?(.saved(Date(), reason: "Watch face settings were queued for Apple Watch. Keep zShellWatch open on the watch to apply them immediately."))
                 } else {
                     completion?(.saved(Date(), reason: "Watch is not reachable. The update was saved and will apply when zShellWatch opens on Apple Watch."))
                 }
             }
-            return
-        }
-
-        session.sendMessage(message, replyHandler: { _ in
+        } catch {
+            watchSessionLogger.error("Error updating watch application context: \(error.localizedDescription, privacy: .public)")
             DispatchQueue.main.async {
-                completion?(.delivered(Date()))
-            }
-        }) { error in
-            watchSessionLogger.error("Error sending settings to Apple Watch: \(error.localizedDescription, privacy: .public)")
-            DispatchQueue.main.async {
-                if contextError == nil {
-                    completion?(.saved(Date(), reason: "Immediate sync failed, but the update was saved for Apple Watch. \(error.localizedDescription)"))
-                } else {
-                    completion?(.failed(Date(), reason: error.localizedDescription))
-                }
+                completion?(.failed(Date(), reason: error.localizedDescription))
             }
         }
     }
@@ -120,50 +119,14 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         }
     }
     
-    func sendData(data: Data){
-        if WCSession.default.isReachable {
-         
-            WCSession.default.sendMessageData(data, replyHandler: nil) { error in
-                watchSessionLogger.error("Error sending messageData to Apple Watch: \(error.localizedDescription, privacy: .public)")
-            }
-            
-        } else {
-            watchSessionLogger.warning("WCSession is not reachable.")
-        }
-    }
-    
-    func session(_ session: WCSession, didReceiveMessageData messageData: Data) {
-        watchSessionLogger.info("Received messageData: \(messageData.count, privacy: .public)")
-
-      
-    }
-    
-    // Send message
-    func sendMessage(message: [String: Any]) {
-        if WCSession.default.isReachable {
-            WCSession.default.sendMessage(message, replyHandler: nil) { error in
-                watchSessionLogger.error("Error sending message to Apple Watch: \(error.localizedDescription, privacy: .public)")
-            }
-        } else {
-            watchSessionLogger.warning("WCSession is not reachable.")
-        }
-    }
-    
-    // Received message
-    func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
-        watchSessionLogger.info("Received message: \(String(describing: message), privacy: .public)")
-        applySettings(message)
-    }
-
-    func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
-        watchSessionLogger.info("Received message with reply: \(String(describing: message), privacy: .public)")
-        applySettings(message)
-        replyHandler(["status": "applied"])
-    }
-
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) {
-        watchSessionLogger.info("Received application context: \(String(describing: applicationContext), privacy: .public)")
-        applySettings(applicationContext)
+        guard let payloadData = applicationContext[qWatchSessionPayloadDataKey] as? Data else {
+            watchSessionLogger.warning("Received application context without watch sync payload.")
+            return
+        }
+
+        watchSessionLogger.info("Received watch sync payload: \(payloadData.count, privacy: .public) bytes")
+        applySettings(payloadData)
     }
 #if os(iOS)
     func sessionDidBecomeInactive(_ session: WCSession) {
@@ -183,46 +146,20 @@ class WatchSessionManager: NSObject, WCSessionDelegate {
         }
     }
 
-    private func sendApplicationContext(_ message: [String: Any]) -> Error? {
-        guard WCSession.isSupported() else { return nil }
-
-        do {
-            try WCSession.default.updateApplicationContext(message)
-            return nil
-        } catch {
-            watchSessionLogger.error("Error updating application context: \(error.localizedDescription, privacy: .public)")
-            return error
-        }
+    private func updateApplicationContext(with payloadData: Data) throws {
+        guard WCSession.isSupported() else { return }
+        try WCSession.default.updateApplicationContext([qWatchSessionPayloadDataKey: payloadData])
     }
 
-    private func applySettings(_ message: [String: Any]) {
-        if let payload = WatchSyncPayload(message: message) {
+    private func applySettings(_ payloadData: Data) {
+        do {
+            let payload = try WatchSyncPayload(data: payloadData)
             settingsStore.applyPayload(payload)
-            reloadWidgetTimelines()
+        } catch {
+            watchSessionLogger.error("Could not decode watch sync payload: \(error.localizedDescription, privacy: .public)")
             return
         }
 
-        if let userName = message[qUserNameKey] as? String {
-            userdefaults?.set(userName, forKey: qUserNameKey)
-        }
-
-        if let machineName = message[qMachineNameKey] as? String {
-            userdefaults?.set(machineName, forKey: qMachineNameKey)
-        }
-
-        if let faceLineOrder = message[qFaceLineOrderKey] as? [String] {
-            userdefaults?.set(faceLineOrder, forKey: qFaceLineOrderKey)
-        }
-
-        if let faceTheme = message[qFaceThemeKey] as? String {
-            userdefaults?.set(faceTheme, forKey: qFaceThemeKey)
-        }
-
-        if let faceAnimation = message[qFaceAnimationKey] as? String {
-            userdefaults?.set(faceAnimation, forKey: qFaceAnimationKey)
-        }
-
-        userdefaults?.synchronize()
         reloadWidgetTimelines()
     }
 

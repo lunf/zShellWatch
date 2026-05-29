@@ -8,7 +8,7 @@ import SwiftUI
 struct WatchFacePreview: View {
     let viewModel: QTermiViewModel
     let configuration: WatchFaceConfiguration
-    private let renderer = TerminalWatchFaceRenderer()
+    private let renderer = SelectedWatchFaceRenderer()
 
     private var theme: TermiFaceTheme {
         configuration.theme
